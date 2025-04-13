@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 import java.util.Map;
 
 @Data
-public class ResumeVentaResponse {
+public class ResumenVentaResponse {
   private Long totalVentas;
   private BigDecimal montoTotal;
   private BigDecimal promedioPorVenta;
