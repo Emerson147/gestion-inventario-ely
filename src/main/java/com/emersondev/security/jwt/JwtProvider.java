@@ -22,10 +22,10 @@ import java.util.stream.Collectors;
 @Slf4j
 public class JwtProvider {
 
-  @Value("${app.jwt.secret}")
+  @Value("${app.jwtSecret}")
   private String jwtSecret;
 
-  @Value("${app.jwt.expiration}")
+  @Value("${app.jwtExpiration}")
   private int jwtExpirationMs;
 
   @Value("${app.jwt.refresh-expiration:604800000}") // 7 días por defecto
@@ -94,6 +94,9 @@ public class JwtProvider {
    */
   public boolean validateToken(String token) {
     try {
+      // Elimina posibles comillas escapadas o caracteres no deseados
+      token = token.trim().replace("\\\"", "").replace("\"", "");
+
       Jwts.parser()
               .setSigningKey(getSigningKey())
               .build()

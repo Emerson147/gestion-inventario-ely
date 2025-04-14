@@ -17,7 +17,7 @@ import jakarta.validation.constraints.Size;
  @Builder
  @NoArgsConstructor
  @AllArgsConstructor
- public class ProductRequest {
+ public class ProductoRequest {
 
    /**
     * Código único del producto

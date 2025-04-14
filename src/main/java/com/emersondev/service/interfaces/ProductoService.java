@@ -1,13 +1,13 @@
 package com.emersondev.service.interfaces;
 
-import com.emersondev.api.request.ProductRequest;
+import com.emersondev.api.request.ProductoRequest;
 import com.emersondev.api.response.PagedResponse;
 import com.emersondev.api.response.ProductoResponse;
 
 import java.util.List;
 
 public interface ProductoService {
-  ProductoResponse crearProducto(ProductRequest productoRequest);
+  ProductoResponse crearProducto(ProductoRequest productoRequest);
 
   PagedResponse<ProductoResponse> obtenerProductos(int page, int size, String sortBy, String sortDir);
 
@@ -17,7 +17,7 @@ public interface ProductoService {
 
   List<ProductoResponse> buscarProductos(String termino);
 
-  ProductoResponse actualizarProducto(Long id, ProductRequest productoRequest);
+  ProductoResponse actualizarProducto(Long id, ProductoRequest productoRequest);
 
   void eliminarProducto(Long id);
 

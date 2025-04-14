@@ -22,7 +22,7 @@ public class Usuario {
   private String nombre;
 
   @Column(nullable = false)
-  private String apellido;
+  private String apellidos;
 
   @Column(nullable = false, unique = true)
   private String username;
