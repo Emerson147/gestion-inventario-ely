@@ -11,11 +11,11 @@ public class JwtTokenValidator {
   }
 
   public boolean validate(String token) {
-    return jwtProvider.validateJwtToken(token);
+    return jwtProvider.validateToken(token);
   }
 
   public String getUsernameFromToken(String token) {
-    return jwtProvider.getUsernameFromJwtToken(token);
+    return jwtProvider.getUsernameFromToken(token);
   }
 
 }
