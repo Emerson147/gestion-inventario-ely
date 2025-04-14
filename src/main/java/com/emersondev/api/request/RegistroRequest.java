@@ -28,7 +28,7 @@ public class RegistroRequest {
    */
   @NotBlank(message = "El apellido es obligatorio")
   @Size(min = 2, max = 50, message = "El apellido debe tener entre 2 y 50 caracteres")
-  private String apellido;
+  private String apellidos;
 
   /**
    * Nombre de usuario para la autenticación
