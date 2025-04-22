@@ -2,25 +2,35 @@ package com.emersondev.service.interfaces;
 
 import com.emersondev.api.request.CambiarPasswordRequest;
 import com.emersondev.api.request.UsuarioRequest;
+import com.emersondev.api.response.PagedResponse;
 import com.emersondev.api.response.UsuarioResponse;
 
 import java.util.List;
 
 public interface UsuarioService {
 
-  UsuarioResponse crearUsuario(UsuarioRequest usuarioRequest);
+  PagedResponse<UsuarioResponse> obtenerTodosLosUsuarios(Integer page, Integer size, String sortBy, String sortDir);
 
   UsuarioResponse obtenerUsuarioPorId(Long id);
 
-  UsuarioResponse obtenerUsuarioActual();
+  UsuarioResponse obtenerUsuarioPorUsername(String username);
 
-  List<UsuarioResponse> obtenerTodosLosUsuarios();
+  UsuarioResponse crearUsuario(UsuarioRequest usuarioRequest);
 
   UsuarioResponse actualizarUsuario(Long id, UsuarioRequest usuarioRequest);
 
-  void cambiarPassword(CambiarPasswordRequest cambiarPasswordRequest);
+  void eliminarUsuario(Long id);
 
-  void desactivarUsuario(Long id);
+  void cambiarEstadoUsuario(Long id, Boolean activo);
 
-  void activarUsuario(Long id);
+  UsuarioResponse actualizarRolesUsuario(Long id, List<String> roles);
+
+  UsuarioResponse obtenerUsuarioActual();
+
+  List<String> obtenerTodosLosRoles();
+
+  boolean existePorUsername(String username);
+
+  boolean existePorEmail(String email);
+
 }
