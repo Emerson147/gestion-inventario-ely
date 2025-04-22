@@ -18,12 +18,6 @@ public class DataInitializer {
         rolRepository.save(adminRole);
       }
 
-      if (rolRepository.findByNombre(Rol.NombreRol.ROLE_INVENTARIO).isEmpty()) {
-        Rol inventarioRole = new Rol();
-        inventarioRole.setNombre(Rol.NombreRol.ROLE_INVENTARIO);
-        rolRepository.save(inventarioRole);
-      }
-
       if (rolRepository.findByNombre(Rol.NombreRol.ROLE_VENDEDOR).isEmpty()) {
         Rol vendedorRole = new Rol();
         vendedorRole.setNombre(Rol.NombreRol.ROLE_VENDEDOR);

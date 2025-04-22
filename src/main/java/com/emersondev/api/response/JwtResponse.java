@@ -26,4 +26,11 @@ public class JwtResponse {
     this.email = email;
     this.roles = roles;
   }
+
+  public JwtResponse(String jwt, String requestRefreshToken, String username, List<String> roles) {
+    this.token = jwt;
+    this.refreshToken = requestRefreshToken;
+    this.username = username;
+    this.roles = roles;
+  }
 }

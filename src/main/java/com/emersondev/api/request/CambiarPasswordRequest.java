@@ -33,4 +33,6 @@ public class CambiarPasswordRequest {
    */
   @NotBlank(message = "La confirmación de la contraseña es obligatoria")
   private String confirmarPassword;
-  }
+
+
+}

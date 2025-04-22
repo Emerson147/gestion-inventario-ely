@@ -5,6 +5,7 @@ import com.emersondev.security.jwt.JwtAuthenticationEntryPoint;
 import com.emersondev.security.jwt.JwtTokenValidator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -16,6 +17,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
 
 @Configuration
 @EnableWebSecurity
@@ -53,7 +55,8 @@ public class SecurityConfig {
             .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth ->
-                    auth.requestMatchers("/api/auth/**").permitAll()
+                    auth    .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                            .requestMatchers("/api/auth/**").permitAll()
 //                            .requestMatchers("/api/books/**").permitAll()  // Allow book browsing without authentication
 //                            .requestMatchers("/api/categories/**").permitAll()
 //                            .requestMatchers("/api/docs/**").permitAll()
