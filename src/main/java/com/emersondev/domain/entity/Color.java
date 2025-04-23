@@ -1,12 +1,19 @@
 package com.emersondev.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
 
 import java.util.HashSet;
 import java.util.Set;
 
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@ToString(exclude = {"producto", "tallas"})
+@EqualsAndHashCode(exclude = {"producto", "tallas"})
 @Entity
 @Table(name = "colores")
 public class Color {
@@ -20,8 +27,10 @@ public class Color {
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "producto_id", nullable = false)
+  @JsonBackReference
   private Producto producto;
 
   @OneToMany(mappedBy = "color", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonManagedReference
   private Set<Talla> tallas = new HashSet<>();
 }
