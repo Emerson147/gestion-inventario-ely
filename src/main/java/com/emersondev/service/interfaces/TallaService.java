@@ -9,7 +9,7 @@ public interface TallaService {
 
   TallaResponse crearTalla(Long colorId, TallaRequest tallaRequest);
 
-  TallaResponse obtenerTallaPorId(Long id);
+  TallaResponse obtenerTallaPorId(Long id, Long colorId);
 
   List<TallaResponse> obtenerTallasPorColor(Long colorId);
 
