@@ -34,6 +34,10 @@ public class ProductoMapper {
   }
 
   public ProductoResponse toResponse(Producto producto) {
+    return toResponse(producto, 0); // Comienza con profundidad 0
+  }
+
+  public ProductoResponse toResponse(Producto producto, int depth) {
     if (producto == null) {
       return null;
     }
@@ -51,9 +55,10 @@ public class ProductoMapper {
     response.setFechaCreacion(producto.getFechaCreacion());
     response.setFechaActualizacion(producto.getFechaActualizacion());
 
-    if (producto.getColores() != null) {
+    // Solo mapea relaciones si no superamos la profundidad máxima
+    if (depth < 1 && producto.getColores() != null) {
       response.setColores(producto.getColores().stream()
-              .map(this::mapColorToResponse)
+              .map(color -> mapColorToResponse(color, depth + 1))
               .collect(Collectors.toList()));
     } else {
       response.setColores(new ArrayList<>());
@@ -62,7 +67,7 @@ public class ProductoMapper {
     return response;
   }
 
-  private ColorResponse mapColorToResponse(Color color) {
+  private ColorResponse mapColorToResponse(Color color, int depth) {
     if (color == null) {
       return null;
     }
@@ -71,9 +76,9 @@ public class ProductoMapper {
     response.setId(color.getId());
     response.setNombre(color.getNombre());
 
-    if (color.getTallas() != null) {
+    if (depth < 2 && color.getTallas() != null) {
       response.setTallas(color.getTallas().stream()
-              .map(this::mapTallaToResponse)
+              .map(talla -> mapTallaToResponse(talla, depth + 1))
               .collect(Collectors.toList()));
     } else {
       response.setTallas(new ArrayList<>());
@@ -82,7 +87,7 @@ public class ProductoMapper {
     return response;
   }
 
-  private TallaResponse mapTallaToResponse(Talla talla) {
+  private TallaResponse mapTallaToResponse(Talla talla, int depth) {
     if (talla == null) {
       return null;
     }
@@ -90,6 +95,7 @@ public class ProductoMapper {
     TallaResponse response = new TallaResponse();
     response.setId(talla.getId());
     response.setNumero(talla.getNumero());
+    response.setCantidad(String.valueOf(talla.getCantidad()));
 
     return response;
   }

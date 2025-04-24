@@ -1,17 +1,22 @@
 package com.emersondev.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.awt.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@ToString(exclude = {"colores"})
+@EqualsAndHashCode(exclude = {"colores"})
 @Entity
 @Table(name = "productos")
 public class Producto {
@@ -43,6 +48,7 @@ public class Producto {
   private String imagen;
 
   @OneToMany(mappedBy = "producto", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonManagedReference
   private Set<Color> colores = new HashSet<>();
 
   @CreationTimestamp
