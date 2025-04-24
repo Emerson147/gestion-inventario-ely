@@ -1,5 +1,6 @@
 package com.emersondev.service.interfaces;
 
+import com.emersondev.domain.exception.BusinessException;
 import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -32,5 +33,12 @@ public interface FileStorageService {
    * @return Extensión del archivo
    */
   String getFileExtension(MultipartFile file);
+
+  /**
+   * Valida si el archivo es una imagen
+   * @param file Archivo a validar
+   * @throws BusinessException Si el archivo no es una imagen válida
+   */
+  void validateImageFile(MultipartFile file) throws BusinessException;
 
 }

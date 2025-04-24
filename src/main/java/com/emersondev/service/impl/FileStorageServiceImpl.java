@@ -140,4 +140,56 @@ public class FileStorageServiceImpl implements FileStorageService {
     }
     return originalFileName.substring(lastDotIndex);
   }
+
+  @Override
+  public void validateImageFile(MultipartFile file) throws BusinessException {
+    log.info("Validando archivo de imagen: {}", file.getOriginalFilename());
+
+    // Verificar si el archivo está vacío
+    if (file == null || file.isEmpty()) {
+      log.error("No se puede procesar un archivo vacío");
+      throw new BusinessException("No se puede procesar un archivo vacío");
+    }
+
+    // Verificar si es una imagen basándose en el tipo de contenido
+    String contentType = file.getContentType();
+    if (contentType == null || !contentType.startsWith("image/")) {
+      log.error("El archivo proporcionado no es una imagen válida: {}", contentType);
+      throw new BusinessException("El archivo proporcionado no es una imagen válida");
+    }
+
+    // Verificar extensión del archivo
+    String extension = getFileExtension(file).toLowerCase();
+    if (!isValidImageExtension(extension)) {
+      log.error("La extensión del archivo no es válida para una imagen: {}", extension);
+      throw new BusinessException("El tipo de archivo no es válido para una imagen");
+    }
+
+    // Verificar tamaño del archivo (por ejemplo, máximo 5MB)
+    long maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.getSize() > maxSize) {
+      log.error("El tamaño del archivo excede el límite permitido: {} bytes", file.getSize());
+      throw new BusinessException("El tamaño del archivo excede el límite permitido (5MB)");
+    }
+  }
+
+  /**
+   * Verifica si la extensión del archivo corresponde a un formato de imagen aceptado
+   */
+  private boolean isValidImageExtension(String extension) {
+    if (extension == null || extension.isEmpty()) {
+      return false;
+    }
+
+    // Lista de extensiones de imagen válidas
+    String[] validExtensions = {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp"};
+
+    for (String validExtension : validExtensions) {
+      if (extension.equalsIgnoreCase(validExtension)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
 }
