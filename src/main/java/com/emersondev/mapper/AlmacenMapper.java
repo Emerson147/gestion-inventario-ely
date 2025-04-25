@@ -7,6 +7,11 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class AlmacenMapper {
+
+
+  /**
+   * Convierte un AlmacenRequest a una entidad Almacen
+   */
   public Almacen toEntity(AlmacenRequest request) {
     if (request == null) {
       return null;
@@ -18,8 +23,12 @@ public class AlmacenMapper {
     almacen.setDescripcion(request.getDescripcion());
 
     return almacen;
+
   }
 
+  /**
+   * Convierte una entidad Almacen a un AlmacenResponse
+   */
   public AlmacenResponse toResponse(Almacen almacen) {
     if (almacen == null) {
       return null;
@@ -30,7 +39,10 @@ public class AlmacenMapper {
     response.setNombre(almacen.getNombre());
     response.setUbicacion(almacen.getUbicacion());
     response.setDescripcion(almacen.getDescripcion());
+    response.setFechaCreacion(almacen.getFechaCreacion());
+    response.setFechaActualizacion(almacen.getFechaActualizacion());
 
     return response;
   }
+
 }

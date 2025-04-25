@@ -2,7 +2,10 @@ package com.emersondev.domain.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -24,4 +27,11 @@ public class Almacen {
 
   @OneToMany(mappedBy = "almacen", cascade = CascadeType.ALL)
   private Set<Inventario> inventarios = new HashSet<>();
+
+  @CreationTimestamp
+  @Column(updatable = false)
+  private LocalDateTime fechaCreacion;
+
+  @UpdateTimestamp
+  private LocalDateTime fechaActualizacion;
 }

@@ -15,4 +15,15 @@ public interface AlmacenRepository extends JpaRepository<Almacen, Long> {
    */
   Optional<Almacen> findByNombre(String nombre);
 
+
+  /**
+   * Busca un almacén por su nombre ignorando mayúsculas/minúsculas
+   */
+  Optional<Almacen> findByNombreIgnoreCase(String nombre);
+
+  /**
+   * Verifica si existe un almacén con el nombre especificado
+   */
+  boolean existsByNombreIgnoreCase(String nombre);
+
 }
