@@ -14,43 +14,30 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ClienteRequest {
-  /**
-   * * Nombre del cliente
-   */
-  @NotBlank(message = "El nombre es obligatorio")
-  @Size(min = 2, max = 50, message = "El nombre debe tener entre 2 y 50 caracteres")
-  private String nombre;
 
-  /**
-   * Apellido del cliente
-   */
-  @NotBlank(message = "El apellido es obligatorio")
-  @Size(min = 2, max = 50, message = "El apellido debe tener entre 2 y 50 caracteres")
-  private String apellido;
+  @NotBlank(message = "Los nombres son obligatorios")
+  @Size(max = 100, message = "Los nombres no deben exceder los 100 caracteres")
+  private String nombres;
 
-  /**
-   * Documento identificativo del cliente (DNI, NIE, etc.)
-   */
-  @NotBlank(message = "El documento es obligatorio")
-  @Pattern(regexp = "^[0-9A-Z]{5,15}$", message = "El documento debe contener entre 5 y 15 caracteres alfanuméricos")
-  private String documento;
+  @NotBlank(message = "Los apellidos son obligatorios")
+  @Size(max = 100, message = "Los apellidos no deben exceder los 100 caracteres")
+  private String apellidos;
 
-  /**
-   * Correo electrónico del cliente
-   */
-  @NotBlank(message = "El email es obligatorio")
-  @Email(message = "El email debe ser válido")
-  private String email;
+  @Size(max = 15, message = "El DNI no debe exceder los 15 caracteres")
+  @Pattern(regexp = "^[0-9]*$", message = "El DNI solo debe contener números")
+  private String dni;
 
-  /**
-   * Número de teléfono del cliente
-   */
-  @Pattern(regexp = "^[0-9]{9,15}$", message = "El teléfono debe contener entre 9 y 15 dígitos")
+  @Size(max = 15, message = "El RUC no debe exceder los 15 caracteres")
+  @Pattern(regexp = "^[0-9]*$", message = "El RUC solo debe contener números")
+  private String ruc;
+
+  @Size(max = 15, message = "El teléfono no debe exceder los 15 caracteres")
   private String telefono;
 
-  /**
-   * Dirección física del cliente
-   */
-  @Size(max = 255, message = "La dirección no puede tener más de 255 caracteres")
+  @Size(max = 255, message = "La dirección no debe exceder los 255 caracteres")
   private String direccion;
+
+  @Email(message = "El formato del email no es válido")
+  @Size(max = 100, message = "El email no debe exceder los 100 caracteres")
+  private String email;
 }

@@ -7,10 +7,10 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 public class ClienteNotFoundException extends ResourceNotFoundException {
 
   public ClienteNotFoundException(Long id) {
-    super("Cliente", "id", id);
+    super("No se encontró el cliente con ID: " + id);
   }
 
-  public ClienteNotFoundException(String tipo, String valor) {
-    super("Cliente", tipo, valor);
+  public ClienteNotFoundException(String field, String value) {
+    super("No se encontró el cliente con " + field + ": " + value);
   }
 }
