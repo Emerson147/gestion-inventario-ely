@@ -2,6 +2,10 @@ package com.emersondev.domain.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.LocalDateTime;
 
 @Data
 @Entity
@@ -11,6 +15,9 @@ public class Inventario {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
+
+  @Column(nullable = false, unique = true)
+  private String serie;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "producto_id", nullable = false)
@@ -29,11 +36,13 @@ public class Inventario {
   private Almacen almacen;
 
   @Column(nullable = false)
-  private Integer cantidad;
+  private Integer cantidad = 0;
 
-  // Serie única para cada zapato en inventario
-  @Column(unique = true, nullable = false)
-  private String serie;
+  @CreationTimestamp
+  @Column(updatable = false)
+  private LocalDateTime fechaCreacion;
 
-  private String ubicacionExacta; // Ubicación dentro del almacén
+  @UpdateTimestamp
+  private LocalDateTime fechaActualizacion;
+
 }

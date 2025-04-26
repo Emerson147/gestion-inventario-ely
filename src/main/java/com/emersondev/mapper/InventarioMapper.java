@@ -12,26 +12,15 @@ import com.emersondev.domain.entity.Talla;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.stream.Collectors;
+
 @Component
 @RequiredArgsConstructor
 public class InventarioMapper {
 
-  private final ProductoMapper productoMapper;
-  private final AlmacenMapper almacenMapper;
-
-  public Inventario toEntity(InventarioRequest request) {
-    if (request == null) {
-      return null;
-    }
-
-    Inventario inventario = new Inventario();
-    inventario.setCantidad(request.getCantidad());
-    inventario.setSerie(request.getSerie());
-    inventario.setUbicacionExacta(request.getUbicacionExacta());
-
-    return inventario;
-  }
-
+  /**
+   * Convierte una entidad Inventario a un InventarioResponse
+   */
   public InventarioResponse toResponse(Inventario inventario) {
     if (inventario == null) {
       return null;
@@ -39,67 +28,44 @@ public class InventarioMapper {
 
     InventarioResponse response = new InventarioResponse();
     response.setId(inventario.getId());
-    response.setCantidad(inventario.getCantidad());
     response.setSerie(inventario.getSerie());
-    response.setUbicacionExacta(inventario.getUbicacionExacta());
+    response.setCantidad(inventario.getCantidad());
+    response.setFechaCreacion(inventario.getFechaCreacion());
+    response.setFechaActualizacion(inventario.getFechaActualizacion());
 
+    // Mapeo de producto
     if (inventario.getProducto() != null) {
-      response.setProducto(mapSimplificadoProducto(inventario.getProducto()));
+      InventarioResponse.ProductoSimpleResponse producto = new InventarioResponse.ProductoSimpleResponse();
+      producto.setId(inventario.getProducto().getId());
+      producto.setCodigo(inventario.getProducto().getCodigo());
+      producto.setNombre(inventario.getProducto().getNombre());
+      response.setProducto(producto);
     }
 
+    // Mapeo de color
     if (inventario.getColor() != null) {
-      response.setColor(mapSimplificadoColor(inventario.getColor()));
+      InventarioResponse.ColorSimpleResponse color = new InventarioResponse.ColorSimpleResponse();
+      color.setId(inventario.getColor().getId());
+      color.setNombre(inventario.getColor().getNombre());
+      response.setColor(color);
     }
 
+    // Mapeo de talla
     if (inventario.getTalla() != null) {
-      response.setTalla(mapSimplificadoTalla(inventario.getTalla()));
+      InventarioResponse.TallaSimpleResponse talla = new InventarioResponse.TallaSimpleResponse();
+      talla.setId(inventario.getTalla().getId());
+      talla.setNumero(inventario.getTalla().getNumero());
+      response.setTalla(talla);
     }
 
+    // Mapeo de almacén
     if (inventario.getAlmacen() != null) {
-      response.setAlmacen(almacenMapper.toResponse(inventario.getAlmacen()));
+      InventarioResponse.AlmacenSimpleResponse almacen = new InventarioResponse.AlmacenSimpleResponse();
+      almacen.setId(inventario.getAlmacen().getId());
+      almacen.setNombre(inventario.getAlmacen().getNombre());
+      almacen.setUbicacion(inventario.getAlmacen().getUbicacion());
+      response.setAlmacen(almacen);
     }
-
-    return response;
-  }
-
-  // Métodos auxiliares para mapear objetos simplificados sin relaciones anidadas
-
-  private ProductoResponse mapSimplificadoProducto(Producto producto) {
-    if (producto == null) {
-      return null;
-    }
-
-    ProductoResponse response = new ProductoResponse();
-    response.setId(producto.getId());
-    response.setCodigo(producto.getCodigo());
-    response.setNombre(producto.getNombre());
-    response.setMarca(producto.getMarca());
-    response.setModelo(producto.getModelo());
-    response.setPrecioVenta(producto.getPrecioVenta());
-
-    return response;
-  }
-
-  private ColorResponse mapSimplificadoColor(Color color) {
-    if (color == null) {
-      return null;
-    }
-
-    ColorResponse response = new ColorResponse();
-    response.setId(color.getId());
-    response.setNombre(color.getNombre());
-
-    return response;
-  }
-
-  private TallaResponse mapSimplificadoTalla(Talla talla) {
-    if (talla == null) {
-      return null;
-    }
-
-    TallaResponse response = new TallaResponse();
-    response.setId(talla.getId());
-    response.setNumero(talla.getNumero());
 
     return response;
   }

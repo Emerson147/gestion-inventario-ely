@@ -18,6 +18,7 @@ public class InventarioRequest {
   @NotNull(message = "El ID del producto es obligatorio")
   private Long productoId;
 
+
   @NotNull(message = "El ID del color es obligatorio")
   private Long colorId;
 
@@ -34,4 +35,5 @@ public class InventarioRequest {
   private String serie;
 
   private String ubicacionExacta;
+
 }
