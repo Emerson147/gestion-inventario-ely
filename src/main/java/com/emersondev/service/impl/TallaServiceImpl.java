@@ -53,9 +53,6 @@ public class TallaServiceImpl implements TallaService {
     //Crear y guardar la nueva talla
     Talla talla = tallaMapper.toEntity(tallaRequest, color);
 
-    //Asegurarse de que se asigna la cantidad correctamente
-    talla.setCantidad(tallaRequest.getCantidad() != null ? tallaRequest.getCantidad() : "0");
-
     // Guardar la talla en la base de datos
     talla = tallaRepository.save(talla);
 
@@ -130,8 +127,6 @@ public class TallaServiceImpl implements TallaService {
     //Actualizar datos de la talla
     talla.setNumero(tallaRequest.getNumero());
 
-    //Agregar actualizacion de cantidad
-    talla.setCantidad(tallaRequest.getCantidad() != null ? tallaRequest.getCantidad() : "0");
 
     talla = tallaRepository.save(talla);
     log.info("Talla actualizada exitosamente con ID: {}", talla.getId());

@@ -22,8 +22,8 @@ public class Talla {
   @Column(nullable = false)
   private String numero; // Puede ser "34", "35", etc.
 
-  @Column(nullable = false)
-  private String cantidad; // Puede ser "10", "20", etc.
+//  @Column(nullable = false)
+//  private String cantidad; // Puede ser "10", "20", etc.
   
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "color_id", nullable = false)

@@ -15,7 +15,5 @@ public class TallaRequest {
   @NotBlank(message = "El número de talla es obligatorio")
   private String numero;
 
-  @NotBlank(message = "La cantidad es obligatoria")
-  private String cantidad;
 
 }

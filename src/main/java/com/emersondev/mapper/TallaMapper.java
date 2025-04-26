@@ -36,7 +36,6 @@ public class TallaMapper {
     TallaResponse response = new TallaResponse();
     response.setId(talla.getId());
     response.setNumero(talla.getNumero());
-    response.setCantidad(talla.getCantidad());
 
     return response;
   }
