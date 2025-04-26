@@ -95,7 +95,6 @@ public class ProductoMapper {
     TallaResponse response = new TallaResponse();
     response.setId(talla.getId());
     response.setNumero(talla.getNumero());
-    response.setCantidad(String.valueOf(talla.getCantidad()));
 
     return response;
   }
