@@ -46,15 +46,6 @@ public class ColorMapper {
     for (TallaRequest tallaRequest : tallasRequest) {
       Talla talla = new Talla();
       talla.setNumero(tallaRequest.getNumero());
-
-      //Asegurarse de que se asigna la cantidad correctamente
-      if (tallaRequest.getCantidad() != null) {
-        talla.setCantidad(tallaRequest.getCantidad());
-      } else {
-        //Si por alguna razon viene nulo, asignar un valor por defecto o lanzar una excepcion
-        throw new IllegalArgumentException("El campo cantidad no puede ser nulo");
-      }
-      talla.setNumero(tallaRequest.getNumero());
       talla.setColor(color);
       color.getTallas().add(talla);
     }

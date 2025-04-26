@@ -2,6 +2,7 @@ package com.emersondev.api.controller;
 
 import com.emersondev.api.request.ColorRequest;
 import com.emersondev.api.response.ColorResponse;
+import com.emersondev.api.response.MensajeResponse;
 import com.emersondev.api.response.PagedResponse;
 import com.emersondev.service.interfaces.ColorService;
 import jakarta.validation.Valid;
@@ -61,9 +62,9 @@ public class ColorController {
 
   @DeleteMapping("/{id}")
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<Void> eliminarColor(@PathVariable Long id) {
+  public ResponseEntity<MensajeResponse> eliminarColor(@PathVariable Long id) {
     colorService.eliminarColor(id);
-    return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    return ResponseEntity.ok(new MensajeResponse("Color eliminado correctamente"));
   }
 
 
