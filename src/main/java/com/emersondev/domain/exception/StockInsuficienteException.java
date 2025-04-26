@@ -1,18 +1,20 @@
 package com.emersondev.domain.exception;
 
+import lombok.Getter;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+@Getter
 @ResponseStatus(HttpStatus.BAD_REQUEST)
 public class StockInsuficienteException extends InventarioException {
 
-  public StockInsuficienteException(String message) {
+  private final int stockDisponible;
+  private final int stockSolicitado;
+
+  public StockInsuficienteException(String message, int stockDisponible, int stockSolicitado) {
     super(message);
+    this.stockDisponible = stockDisponible;
+    this.stockSolicitado = stockSolicitado;
   }
 
-  public StockInsuficienteException(String serie, Integer cantidadSolicitada, Integer cantidadDisponible) {
-    super(String.format(
-            "Stock insuficiente para el producto con serie '%s'. Solicitado: %d, Disponible: %d",
-            serie, cantidadSolicitada, cantidadDisponible));
-  }
 }
