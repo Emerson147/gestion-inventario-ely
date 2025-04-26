@@ -17,6 +17,6 @@ public class Rol {
   private NombreRol nombre;
 
   public enum NombreRol {
-    ROLE_ADMIN, ROLE_VENDEDOR, ROLE_INVENTARIO
+    ROLE_ADMIN, ROLE_VENDEDOR
   }
 }
