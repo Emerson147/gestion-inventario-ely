@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -52,7 +53,19 @@ public interface VentaRepository extends JpaRepository<Venta, Long> {
   @Query("SELECT COUNT(v), v.estado FROM Venta v " +
           "WHERE v.fechaCreacion BETWEEN :fechaInicio AND :fechaFin " +
           "GROUP BY v.estado")
+  
   List<Object[]> countVentasByEstado(
           @Param("fechaInicio") LocalDateTime fechaInicio,
           @Param("fechaFin") LocalDateTime fechaFin);
+
+@Query("SELECT SUM(v.total) FROM Venta v WHERE v.fechaCreacion BETWEEN :inicioHoy AND :finHoy")
+  BigDecimal sumTotalByFechaCreacionBetween(
+          @Param("inicioHoy") LocalDateTime inicioHoy,
+          @Param("finHoy") LocalDateTime finHoy);
+
+  boolean existsByClienteId(Long id);
+
+  List<Venta> findByFechaCreacionBetweenAndEstado(LocalDateTime fechaInicio, LocalDateTime fechaFin, Venta.EstadoVenta estadoVenta);
+
+  List<Venta> findByClienteIdAndEstado(Long clienteId, Venta.EstadoVenta estadoVenta);
 }

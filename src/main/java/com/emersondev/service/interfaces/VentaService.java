@@ -1,27 +1,59 @@
 package com.emersondev.service.interfaces;
 
 import com.emersondev.api.request.VentaRequest;
-import com.emersondev.api.response.PagedResponse;
+import com.emersondev.api.response.ReporteVentasResponse;
 import com.emersondev.api.response.VentaResponse;
-import com.emersondev.domain.entity.Factura;
+import com.emersondev.domain.entity.Venta.EstadoVenta;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 public interface VentaService {
-  VentaResponse crearVenta(VentaRequest ventaRequest);
+
+  // Operaciones básicas CRUD
+  VentaResponse registrarVenta(VentaRequest ventaRequest);
 
   VentaResponse obtenerVentaPorId(Long id);
 
   VentaResponse obtenerVentaPorNumero(String numeroVenta);
 
-  PagedResponse<VentaResponse> obtenerVentas(int page, int size, String sortBy, String sortDir);
+  List<VentaResponse> obtenerTodasLasVentas();
 
-  List<VentaResponse> obtenerVentasPorFecha(LocalDate fecha);
+  void eliminarVenta(Long id);
+
+  // Operaciones de búsqueda y filtrado
+  List<VentaResponse> obtenerVentasPorEstado(EstadoVenta estado);
 
   List<VentaResponse> obtenerVentasPorCliente(Long clienteId);
 
-  VentaResponse anularVenta(Long id);
+  List<VentaResponse> obtenerVentasPorUsuario(Long usuarioId);
 
-  VentaResponse generarFactura(Long ventaId, Factura.TipoComprobante tipoComprobante);
+  List<VentaResponse> obtenerVentasEntreFechas(LocalDateTime fechaInicio, LocalDateTime fechaFin);
+
+  List<VentaResponse> obtenerVentasPorFecha(LocalDate fecha);
+
+  List<VentaResponse> buscarVentas(String termino);
+
+  // Operaciones de negocio
+  VentaResponse anularVenta(Long id, String motivo);
+
+  VentaResponse actualizarEstadoVenta(Long id, EstadoVenta nuevoEstado);
+
+  VentaResponse actualizarComprobante(Long id, String serieComprobante, String numeroComprobante);
+
+  VentaResponse revertirVentaCompletada(Long id, String motivo);
+
+  // Reportes y estadísticas
+  ReporteVentasResponse generarReporteVentas(LocalDateTime fechaInicio, LocalDateTime fechaFin);
+
+  Map<String, Object> obtenerResumenDiario(LocalDate fecha);
+
+  List<VentaResponse> obtenerVentasRecientes(int cantidad);
+
+  Map<String, Object> obtenerEstadisticasPorModelo(LocalDate fechaInicio, LocalDate fechaFin);
+
+
+  Map<String, Object> obtenerResumenComprasPorCliente(Long clienteId);
 }

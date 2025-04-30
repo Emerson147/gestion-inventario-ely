@@ -7,12 +7,12 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 @ResponseStatus(HttpStatus.NOT_FOUND)
 public class VentaNotFoundException extends ResourceNotFoundException {
 
-  public VentaNotFoundException(String message) {
-    super(message);
+  public VentaNotFoundException(Long id) {
+    super("No se encontró la venta con ID: " + id);
   }
 
-  public VentaNotFoundException(Long id) {
-    super("Venta", "id", id);
+  public VentaNotFoundException(String field, String value) {
+    super("No se encontró la venta con " + field + ": " + value);
   }
 
 }
