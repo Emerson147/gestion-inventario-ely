@@ -56,4 +56,6 @@ public interface VentaService {
 
 
   Map<String, Object> obtenerResumenComprasPorCliente(Long clienteId);
+
+
 }

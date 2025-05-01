@@ -75,7 +75,7 @@ public class VentaServiceImpl implements VentaService {
     venta.setSerieComprobante(ventaRequest.getSerieComprobante());
     venta.setNumeroComprobante(ventaRequest.getNumeroComprobante());
     venta.setObservaciones(ventaRequest.getObservaciones());
-    venta.setEstado(Venta.EstadoVenta.COMPLETADA);
+    venta.setEstado(Venta.EstadoVenta.PENDIENTE);
 
     // Validar y agregar detalles de la venta
     if (ventaRequest.getDetalles() == null || ventaRequest.getDetalles().isEmpty()) {
