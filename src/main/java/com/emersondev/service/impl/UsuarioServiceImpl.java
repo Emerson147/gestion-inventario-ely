@@ -72,7 +72,7 @@ public class UsuarioServiceImpl implements UsuarioService {
       }
     } else {
       //Si no se especifican roles, asignar el rol de USUARIO por defecto
-      Rol rol = rolRepository.findByNombre(Rol.NombreRol.ROLE_VENDEDOR)
+      Rol rol = rolRepository.findByNombre(Rol.NombreRol.ROLE_VENTAS)
               .orElseThrow(() -> new ResourceNotFoundException("Rol", "nombre", "ROLE_USER"));
       roles.add(rol);
     }

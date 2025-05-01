@@ -1,6 +1,5 @@
 package com.emersondev.service.interfaces;
 
-import com.emersondev.api.request.CambiarPasswordRequest;
 import com.emersondev.api.request.UsuarioRequest;
 import com.emersondev.api.response.PagedResponse;
 import com.emersondev.api.response.UsuarioResponse;
