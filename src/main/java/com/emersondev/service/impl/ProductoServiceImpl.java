@@ -1,12 +1,9 @@
 package com.emersondev.service.impl;
 
-import com.emersondev.api.request.ColorRequest;
 import com.emersondev.api.request.ProductoRequest;
 import com.emersondev.api.response.PagedResponse;
 import com.emersondev.api.response.ProductoResponse;
-import com.emersondev.domain.entity.Color;
 import com.emersondev.domain.entity.Producto;
-import com.emersondev.domain.entity.Talla;
 import com.emersondev.domain.exception.BusinessException;
 import com.emersondev.domain.exception.ProductoNotFoundException;
 import com.emersondev.domain.repository.InventarioRepository;
@@ -16,7 +13,6 @@ import com.emersondev.service.interfaces.FileStorageService;
 import com.emersondev.service.interfaces.ProductoService;
 import com.emersondev.util.PaginationUtils;
 import com.emersondev.util.SerieGenerator;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -24,10 +20,13 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -46,63 +45,35 @@ public class ProductoServiceImpl implements ProductoService {
   @CacheEvict(value = "productos", allEntries = true)
   public ProductoResponse crearProducto(ProductoRequest productoRequest) {
     log.info("Creando nuevo Producto: {}", productoRequest.getNombre());
+    log.info("Código recibido en request: '{}'", productoRequest.getCodigo());
 
     //Verificar si ya existe un producto con el mismo código
-    if (productoRequest.getCodigo() == null && !productoRequest.getCodigo().isEmpty() && productoRepository.existsByCodigo(productoRequest.getCodigo())) {
+    if (productoRequest.getCodigo() != null && !productoRequest.getCodigo().isEmpty() && productoRepository.existsByCodigo(productoRequest.getCodigo())) {
       log.error("Ya existe un producto con el código: {}", productoRequest.getCodigo());
       throw new BusinessException("Ya existe un producto con el código especificado");
     }
 
     //Mapear el objeto request de una entidad
     Producto producto = productoMapper.toEntity(productoRequest);
+    log.info("Código después de mapeo: '{}'", producto.getCodigo());
 
-    //Si no se proporciona un codigo de producto, generamos uno automáticamente
-    if (producto.getCodigo() != null || producto.getCodigo().isEmpty()) {
+
+    if (producto.getCodigo() == null || producto.getCodigo().isEmpty()) {
       producto.setCodigo(serieGenerator.generarCodigoProducto());
+      log.info("Código generado automáticamente: '{}'", producto.getCodigo());
+    } else {
+      log.info("Usando código proporcionado: '{}'", producto.getCodigo());
     }
+
 
     //Guardar el producto en la base de datos
     producto = productoRepository.save(producto);
     log.info("Producto creado exitosamente con ID: {}", producto.getId());
 
+    log.info("Producto guardado con código: '{}'", producto.getCodigo());
+
+
     return productoMapper.toResponse(producto);
-/*
-    // Si no se proporciona un código, generamos uno automáticamente
-//    if (productoRequest.getCodigo() == null || productoRequest.getCodigo().isEmpty()) {
-//      productoRequest.setCodigo(serieGenerator.generarCodigoProducto());
-//    }
-    // Validamos que el código sea proporcionado manualmente
-//    if (productoRequest.getCodigo() == null || productoRequest.getCodigo().isEmpty()) {
-//      throw new IllegalArgumentException("El código es obligatorio");
-//    }
-//
-//    Producto producto = productoMapper.toEntity(productoRequest);
-//
-//    // Procesamos los colores y tallas
-//    if (productoRequest.getColores() != null && !productoRequest.getColores().isEmpty()) {
-//      for (ColorRequest colorRequest : productoRequest.getColores()) {
-//        Color color = new Color();
-//        color.setNombre(colorRequest.getNombre());
-//        color.setProducto(producto);
-//
-//        if (colorRequest.getTallas() != null && !colorRequest.getTallas().isEmpty()) {
-//          colorRequest.getTallas().forEach(tallaRequest -> {
-//            Talla talla = new Talla();
-//            talla.setNumero(tallaRequest.getNumero());
-//            talla.setColor(color);
-//            talla.setCantidad(tallaRequest.getCantidad());
-//            color.getTallas().add(talla);
-//          });
-//        }
-//
-//        producto.getColores().add(color);
-//      }
-//    }
-//
-//    producto = productoRepository.save(producto);
-//
-//    return productoMapper.toResponse(producto);
- */
   }
 
   @Override
@@ -298,6 +269,11 @@ public class ProductoServiceImpl implements ProductoService {
   public List<String> obtenerTodasLasMarcas() {
     log.debug("Obteniendo todas las marcas de productos");
     return productoRepository.findDistinctMarcas();
+  }
+
+  @Override
+  public long contarProductos() {
+    return 0;
   }
 
   @Override

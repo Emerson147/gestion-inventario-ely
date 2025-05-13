@@ -8,8 +8,8 @@ import java.util.Set;
 @Data
 public class UsuarioResponse {
   private Long id;
-  private String nombre;
-  private String apellido;
+  private String nombres;
+  private String apellidos;
   private String username;
   private String email;
   private boolean activo;

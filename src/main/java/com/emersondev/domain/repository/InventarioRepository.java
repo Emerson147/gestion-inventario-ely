@@ -1,6 +1,8 @@
 package com.emersondev.domain.repository;
 
 import com.emersondev.domain.entity.Inventario;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -106,6 +108,7 @@ public interface InventarioRepository extends JpaRepository<Inventario, Long> {
   List<Inventario> findByProductoIdAndColorIdAndTallaIdOrderByFechaCreacionAsc(
           Long productoId, Long colorId, Long tallaId);
 
+
   /**
    * Calcula el stock total para un producto
    */
@@ -132,4 +135,40 @@ public interface InventarioRepository extends JpaRepository<Inventario, Long> {
           "GROUP BY i.producto.id, i.producto.nombre " +
           "HAVING SUM(i.cantidad) <= :umbral")
   List<Long> findProductosConStockBajo(@Param("umbral") Integer umbral);
+
+
+  @Query("SELECT i FROM Inventario i WHERE i.producto.id = :productoId AND i.color.id = :colorId AND i.talla.id = :tallaId")
+  Optional<Inventario> findByProductoColorTalla(
+          @Param("productoId") Long productoId,
+          @Param("colorId") Long colorId,
+          @Param("tallaId") Long tallaId);
+
+  List<Inventario> findByProductoIdAndColorId(Long productoId, Long colorId);
+
+  List<Inventario> findByEstado(Inventario.EstadoInventario estado);
+
+  @Query("SELECT i FROM Inventario i WHERE " +
+          "(:productoId IS NULL OR i.producto.id = :productoId) AND " +
+          "(:colorId IS NULL OR i.color.id = :colorId) AND " +
+          "(:tallaId IS NULL OR i.talla.id = :tallaId) AND " +
+          "(:estado IS NULL OR i.estado = :estado)")
+  List<Inventario> buscarInventario(
+          @Param("productoId") Long productoId,
+          @Param("colorId") Long colorId,
+          @Param("tallaId") Long tallaId,
+          @Param("estado") Inventario.EstadoInventario estado);
+
+  @Query("SELECT i FROM Inventario i WHERE " +
+          "(:productoId IS NULL OR i.producto.id = :productoId) AND " +
+          "(:colorId IS NULL OR i.color.id = :colorId) AND " +
+          "(:tallaId IS NULL OR i.talla.id = :tallaId) AND " +
+          "(:estado IS NULL OR i.estado = :estado)")
+  Page<Inventario> buscarInventarioPaginado(
+          @Param("productoId") Long productoId,
+          @Param("colorId") Long colorId,
+          @Param("tallaId") Long tallaId,
+          @Param("estado") Inventario.EstadoInventario estado,
+          Pageable pageable);
+
+
 }

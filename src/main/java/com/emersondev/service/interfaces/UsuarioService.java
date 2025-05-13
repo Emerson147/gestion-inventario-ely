@@ -30,6 +30,6 @@ public interface UsuarioService {
 
   boolean existePorUsername(String username);
 
-  boolean existePorEmail(String email);
+  void existePorEmail(String email);
 
 }

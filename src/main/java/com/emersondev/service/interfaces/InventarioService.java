@@ -1,9 +1,11 @@
 package com.emersondev.service.interfaces;
 
 import com.emersondev.api.request.InventarioRequest;
+import com.emersondev.api.request.MovimientoInventarioRequest;
 import com.emersondev.api.response.InventarioResponse;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
+import com.emersondev.api.response.MovimientoInventarioResponse;
+import com.emersondev.api.response.PagedResponse;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -66,13 +68,6 @@ public interface InventarioService {
   void eliminarInventario(Long id);
 
   /**
-   * Obtiene los registros de inventario con stock bajo
-   * @param umbral nivel mínimo de stock
-   * @return lista de inventario con stock bajo
-   */
-  List<InventarioResponse> obtenerInventarioBajoStock(Integer umbral);
-
-  /**
    * Obtiene el stock total de un producto (sumando todos sus registros de inventario)
    * @param productoId ID del producto
    * @return cantidad total en stock
@@ -95,7 +90,7 @@ public interface InventarioService {
    * @param tallaId ID de la talla
    * @param cantidad cantidad vendida
    */
-  void actualizarStockPorVenta(Long productoId, Long colorId, Long tallaId, Integer cantidad);
+  void actualizarStockPorVenta(Long productoId, Long colorId, Long tallaId, Integer cantidad, Long ventaId);
 
   /**
    * Obtiene el inventario con stock bajo
@@ -111,5 +106,17 @@ public interface InventarioService {
    */
   void disminuirStock(Long inventarioId, Integer cantidad);
 
+
+  void devolverStockPorAnulacion(Long productoId, Long colorId, Long tallaId, Integer cantidad, Long ventaId);
+
+  long contarProductosSinStock();
+
+//  // Nuevos métodos para reportes
+//  Map<String, Object> generarReporteStockActual();
+//  Map<String, Object> generarReporteStockCritico(int stockMinimo);
+//  Map<String, Object> generarReporteRotacionInventario(LocalDate fechaInicio, LocalDate fechaFin);
+//  Map<String, Object> generarReporteValorInventario();
+  
+  
 }
 

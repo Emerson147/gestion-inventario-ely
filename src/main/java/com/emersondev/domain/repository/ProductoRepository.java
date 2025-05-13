@@ -50,4 +50,5 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
   @Query("SELECT DISTINCT p.marca FROM Producto p WHERE p.marca IS NOT NULL")
   List<String> findDistinctMarcas();
 
+
 }

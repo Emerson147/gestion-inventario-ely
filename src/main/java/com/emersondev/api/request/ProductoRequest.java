@@ -22,7 +22,7 @@ import jakarta.validation.constraints.Size;
    /**
     * Código único del producto
     */
-   @NotBlank(message = "El código es obligatorio")
+//   @NotBlank(message = "El código es obligatorio")
    private String codigo;
 
    /**

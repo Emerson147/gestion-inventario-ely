@@ -21,7 +21,7 @@ public class UsuarioRequest {
      */
   @NotBlank(message = "El nombre es obligatorio")
   @Size(min = 2, max = 50, message = "El nombre debe tener entre 2 y 50 caracteres")
-  private String nombre;
+  private String nombres;
 
   /** * Apellido del usuario*/
   @NotBlank(message = "El apellido es obligatorio")

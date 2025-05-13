@@ -34,7 +34,7 @@ public class PagoMapper {
     if (pago.getUsuario() != null) {
       PagoResponse.UsuarioInfo usuario = new PagoResponse.UsuarioInfo();
       usuario.setId(pago.getUsuario().getId());
-      usuario.setNombre(pago.getUsuario().getNombre());
+      usuario.setNombre(pago.getUsuario().getNombres());
       usuario.setUsername(pago.getUsuario().getUsername());
       response.setUsuario(usuario);
     }

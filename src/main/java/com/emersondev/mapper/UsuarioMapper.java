@@ -18,7 +18,7 @@ public class UsuarioMapper {
     }
 
     Usuario usuario = new Usuario();
-    usuario.setNombre(request.getNombre());
+    usuario.setNombres(request.getNombres());
     usuario.setApellidos(request.getApellidos());
     usuario.setUsername(request.getUsername());
     usuario.setEmail(request.getEmail());
@@ -34,8 +34,8 @@ public class UsuarioMapper {
 
     UsuarioResponse response = new UsuarioResponse();
     response.setId(usuario.getId());
-    response.setNombre(usuario.getNombre());
-    response.setApellido(usuario.getApellidos());
+    response.setNombres(usuario.getNombres());
+    response.setApellidos(usuario.getApellidos());
     response.setUsername(usuario.getUsername());
     response.setEmail(usuario.getEmail());
     response.setActivo(usuario.isActivo());

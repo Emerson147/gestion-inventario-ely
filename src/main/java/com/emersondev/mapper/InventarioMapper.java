@@ -1,18 +1,10 @@
 package com.emersondev.mapper;
 
-import com.emersondev.api.request.InventarioRequest;
-import com.emersondev.api.response.ColorResponse;
-import com.emersondev.api.response.InventarioResponse;
-import com.emersondev.api.response.ProductoResponse;
-import com.emersondev.api.response.TallaResponse;
-import com.emersondev.domain.entity.Color;
-import com.emersondev.domain.entity.Inventario;
-import com.emersondev.domain.entity.Producto;
-import com.emersondev.domain.entity.Talla;
+import com.emersondev.api.response.*;
+import com.emersondev.domain.entity.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -69,4 +61,5 @@ public class InventarioMapper {
 
     return response;
   }
+
 }

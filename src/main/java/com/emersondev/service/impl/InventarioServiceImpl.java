@@ -8,13 +8,15 @@ import com.emersondev.domain.repository.*;
 import com.emersondev.mapper.InventarioMapper;
 import com.emersondev.service.interfaces.InventarioService;
 import com.emersondev.util.SerieGenerator;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -30,6 +32,7 @@ public class InventarioServiceImpl implements InventarioService {
   private final AlmacenRepository almacenRepository;
   private final InventarioMapper inventarioMapper;
   private final SerieGenerator serieGenerator;
+  private final VentaRepository ventaRepository;
 
   @Override
   @Transactional
@@ -59,6 +62,11 @@ public class InventarioServiceImpl implements InventarioService {
       throw new BusinessException("La talla especificada no pertenece al color");
     }
 
+    // Verificamos que la cantidad no pueda ser negativa
+    if (request.getCantidad() <= 0) {
+      throw new BusinessException("La cantidad no puede ser negativa");
+    }
+
     // Obtener y validar almacén
     Almacen almacen = almacenRepository.findById(request.getAlmacenId())
             .orElseThrow(() -> new AlmacenNotFoundException(request.getAlmacenId()));
@@ -83,6 +91,7 @@ public class InventarioServiceImpl implements InventarioService {
     inventario.setAlmacen(almacen);
     inventario.setCantidad(request.getCantidad());
     inventario.setSerie(serieGenerator.generarSerieInventario(producto, color, talla));
+    inventario.actualizarEstado();
 
     // Guardar en base de datos
     inventario = inventarioRepository.save(inventario);
@@ -213,6 +222,11 @@ public class InventarioServiceImpl implements InventarioService {
         throw new BusinessException("La talla especificada no pertenece al color");
       }
 
+      // Verificamos que la cantidad no pueda ser negativa
+      if (request.getCantidad() <= 0) {
+        throw new BusinessException("La cantidad no puede ser negativa");
+      }
+
       // Obtener y validar almacén
       Almacen almacen = almacenRepository.findById(request.getAlmacenId())
               .orElseThrow(() -> new AlmacenNotFoundException(request.getAlmacenId()));
@@ -250,18 +264,6 @@ public class InventarioServiceImpl implements InventarioService {
     //Eliminar inventario
     inventarioRepository.deleteById(id);
     log.info("Inventario eliminado correctamente");
-  }
-
-  @Override
-  @Transactional
-  public List<InventarioResponse> obtenerInventarioBajoStock(Integer umbral) {
-    log.debug("Obteniendo inventario con stock bajo (umbral: {})", umbral);
-
-    List<Inventario> inventarios = inventarioRepository.findByCantidadLessThanEqual(umbral);
-
-    return inventarios.stream()
-            .map(inventarioMapper::toResponse)
-            .collect(Collectors.toList());
   }
 
   @Override
@@ -316,7 +318,9 @@ public class InventarioServiceImpl implements InventarioService {
       // Si ya existe, actualizamos la cantidad
       log.debug("Actualizando inventario destino existente, cantidad anterior: {}", inventarioDestino.getCantidad());
       inventarioDestino.setCantidad(inventarioDestino.getCantidad() + cantidad);
+      inventarioDestino.actualizarEstado();
       inventarioRepository.save(inventarioDestino);
+
     } else {
       // Si no existe, creamos un nuevo registro
       log.debug("Creando nuevo registro de inventario en destino");
@@ -331,6 +335,7 @@ public class InventarioServiceImpl implements InventarioService {
               inventarioOrigen.getColor(),
               inventarioOrigen.getTalla()
       ));
+      inventarioDestino.actualizarEstado();
       inventarioRepository.save(inventarioDestino);
     }
 
@@ -340,8 +345,6 @@ public class InventarioServiceImpl implements InventarioService {
     inventarioRepository.save(inventarioOrigen);
 
     log.info("Transferencia completada exitosamente");
-
-
   }
 
   @Override
@@ -396,9 +399,13 @@ public class InventarioServiceImpl implements InventarioService {
   @Override
   @Transactional
   @CacheEvict(value = {"inventario", "productos"}, allEntries = true)
-  public void actualizarStockPorVenta(Long productoId, Long colorId, Long tallaId, Integer cantidad) {
+  public void actualizarStockPorVenta(Long productoId, Long colorId, Long tallaId, Integer cantidad, Long ventaId) {
     log.info("Actualizando stock por venta: producto {}, color {}, talla {}, cantidad {}",
             productoId, colorId, tallaId, cantidad);
+
+    // Verificar el ID de ventas
+    Venta venta = ventaRepository.findById(ventaId)
+            .orElseThrow(() -> new ResourceNotFoundException("Venta", "id", ventaId));
 
     // Verificar que haya suficiente stock
     Integer stockDisponible = obtenerStockPorVariante(productoId, colorId, tallaId);
@@ -417,22 +424,30 @@ public class InventarioServiceImpl implements InventarioService {
 
     // Recorrer inventarios y actualizar cantidades (FIFO)
     for (Inventario inventario : inventarios) {
-      if (cantidadRestante <= 0) {
-        break;
-      }
-
+      if (cantidadRestante <= 0) break;
       int cantidadDisponible = inventario.getCantidad();
+      int cantidadAActualizar = Math.min(cantidadDisponible, cantidadRestante);
 
-      if (cantidadDisponible <= cantidadRestante) {
-        // Usar todo este inventario y continuar con el siguiente
-        cantidadRestante -= cantidadDisponible;
-        inventario.setCantidad(0);
-      } else {
-        // Usar parte de este inventario y terminar
-        inventario.setCantidad(cantidadDisponible - cantidadRestante);
-        cantidadRestante = 0;
+      // Crear movimiento
+      MovimientoInventario movimiento = new MovimientoInventario();
+      movimiento.setInventario(inventario);
+      movimiento.setVenta(venta);
+      movimiento.setReferencia("Venta #" + venta.getNumeroVenta());
+      movimiento.setTipo(MovimientoInventario.TipoMovimiento.SALIDA);
+      movimiento.setCantidad(-cantidadAActualizar);
+      movimiento.setDescripcion("Venta de " + cantidadAActualizar + " unidades");
+      String usuario;
+      try {
+        usuario = SecurityContextHolder.getContext().getAuthentication().getName();
+      } catch (Exception e) {
+        usuario = "anonymous";
       }
+      movimiento.setUsuario(usuario);
+      movimiento.setFechaMovimiento(LocalDateTime.now());
 
+      inventario.agregarMovimiento(movimiento);
+      inventario.setCantidad(cantidadDisponible -  cantidadAActualizar);
+      cantidadRestante -= cantidadAActualizar;
       inventarioRepository.save(inventario);
     }
 
@@ -465,4 +480,57 @@ public class InventarioServiceImpl implements InventarioService {
     inventarioRepository.save(inventario);
     log.debug("Stock disminuido correctamente. Nueva cantidad: {}", inventario.getCantidad());
   }
+
+  @Override
+  @Transactional
+  @CacheEvict(value = {"inventario", "productos"}, allEntries = true)
+  public void devolverStockPorAnulacion(Long productoId, Long colorId, Long tallaId, Integer cantidad, Long ventaId) {
+    log.info("Devolviendo stock por anulacion: producto {}, color {}, talla {}, cantidad {}", productoId, colorId, tallaId, cantidad);
+
+    if (cantidad <= 0) {
+      throw new BusinessException("La cantidad a devolver debe ser mayor a cero");
+    }
+
+    Venta venta = ventaRepository.findById(ventaId)
+            .orElseThrow(() -> {
+              log.error("Venta no encontrada con ID: {}", ventaId);
+              return new ResourceNotFoundException("Venta", "id", ventaId);
+            });
+
+    Inventario inventario = inventarioRepository.findByProductoIdAndColorIdAndTallaIdOrderByFechaCreacionAsc(
+            productoId, colorId, tallaId)
+            .stream().findFirst()
+            .orElseThrow(() -> new InventarioNotFoundException("No se encontró inventario para la combinación especificada"));
+
+    MovimientoInventario movimiento = new MovimientoInventario();
+    movimiento.setInventario(inventario);
+    movimiento.setVenta(venta);
+    movimiento.setReferencia("Anulación Venta #" + venta.getNumeroVenta()); // o ID de Venta
+    movimiento.setTipo(MovimientoInventario.TipoMovimiento.ENTRADA);
+    movimiento.setCantidad(cantidad);
+    movimiento.setDescripcion("Devolución por anulación");
+    String usuario;
+    try {
+      usuario = SecurityContextHolder.getContext().getAuthentication().getName();
+    } catch (Exception e) {
+      usuario = "anonymous";
+    }
+    movimiento.setUsuario(usuario);
+    movimiento.setFechaMovimiento(LocalDateTime.now());
+
+    inventario.agregarMovimiento(movimiento);
+    inventario.setCantidad(inventario.getCantidad() + cantidad);
+    inventario.actualizarEstado();
+    inventarioRepository.save(inventario);
+
+    log.info("Stock devuelto correctamente por anulación");
+  }
+
+  @Override
+  public long contarProductosSinStock() {
+    return 0;
+  }
+
+
+
 }

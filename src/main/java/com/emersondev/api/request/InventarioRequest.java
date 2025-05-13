@@ -12,12 +12,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class InventarioRequest {
-  /**
-   * ID del producto
-   */
+
   @NotNull(message = "El ID del producto es obligatorio")
   private Long productoId;
-
 
   @NotNull(message = "El ID del color es obligatorio")
   private Long colorId;

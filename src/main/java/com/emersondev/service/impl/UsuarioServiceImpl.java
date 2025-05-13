@@ -163,7 +163,7 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
 
     //Actualizar datos del usuario
-    usuario.setNombre(usuarioRequest.getNombre());
+    usuario.setNombres(usuarioRequest.getNombres());
     usuario.setApellidos(usuarioRequest.getApellidos());
     usuario.setUsername(usuarioRequest.getUsername());
     usuario.setEmail(usuarioRequest.getEmail());
@@ -288,8 +288,8 @@ public class UsuarioServiceImpl implements UsuarioService {
 
   @Override
   @Transactional
-  public boolean existePorEmail(String email) {
-    return usuarioRepository.existsByEmail(email);
+  public void existePorEmail(String email) {
+    usuarioRepository.existsByEmail(email);
   }
 
 

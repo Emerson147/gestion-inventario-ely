@@ -6,6 +6,7 @@ import com.emersondev.api.response.ProductoResponse;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 public interface ProductoService {
 
@@ -31,4 +32,5 @@ public interface ProductoService {
 
   List<String> obtenerTodasLasMarcas();
 
+  long contarProductos();
 }

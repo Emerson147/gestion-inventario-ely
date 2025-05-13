@@ -19,7 +19,7 @@ public class Usuario {
   private Long id;
 
   @Column(nullable = false)
-  private String nombre;
+  private String nombres;
 
   @Column(nullable = false)
   private String apellidos;

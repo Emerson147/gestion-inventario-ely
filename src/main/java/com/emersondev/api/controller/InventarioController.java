@@ -27,7 +27,7 @@ public class InventarioController {
    * @return el inventario creado
    */
   @PostMapping("/crear")
-  @PreAuthorize("hasRole('ADMIN') or hasRole('VENDEDOR')")
+  @PreAuthorize("hasRole('ADMIN') or hasRole('VENTAS')")
   public ResponseEntity<InventarioResponse> agregarInventario(@Valid @RequestBody InventarioRequest inventarioRequest) {
     InventarioResponse nuevoInventario = inventarioService.agregarInventario(inventarioRequest);
     return new ResponseEntity<>(nuevoInventario, HttpStatus.CREATED);
@@ -38,6 +38,7 @@ public class InventarioController {
    * @return lista de inventarios
    */
   @GetMapping
+  @PreAuthorize("hasRole('ADMIN') or hasRole('VENTAS')")
   public ResponseEntity<List<InventarioResponse>> obtenerTodoElInventario() {
     List<InventarioResponse> inventario = inventarioService.obtenerTodoElInventario();
     return ResponseEntity.ok(inventario);
@@ -49,6 +50,7 @@ public class InventarioController {
    * @return el inventario encontrado
    */
   @GetMapping("/{id}")
+  @PreAuthorize("hasRole('ADMIN') or hasRole('VENTAS')")
   public ResponseEntity<InventarioResponse> obtenerInventarioPorId(@PathVariable Long id) {
     InventarioResponse inventario = inventarioService.obtenerInventarioPorId(id);
     return ResponseEntity.ok(inventario);
@@ -159,4 +161,5 @@ public class InventarioController {
     Integer stock = inventarioService.obtenerStockPorVariante(productoId, colorId, tallaId);
     return ResponseEntity.ok(stock);
   }
+
 }
