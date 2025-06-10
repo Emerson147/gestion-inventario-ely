@@ -68,4 +68,25 @@ public interface VentaRepository extends JpaRepository<Venta, Long> {
   List<Venta> findByFechaCreacionBetweenAndEstado(LocalDateTime fechaInicio, LocalDateTime fechaFin, Venta.EstadoVenta estadoVenta);
 
   List<Venta> findByClienteIdAndEstado(Long clienteId, Venta.EstadoVenta estadoVenta);
+
+  List<Venta> findByFechaCreacionBetweenAndEstadoNot(LocalDateTime inicio, LocalDateTime fin, Venta.EstadoVenta estadoVenta);
+
+  @Query("SELECT COUNT(DISTINCT v.cliente.id) FROM Venta v " +
+          "WHERE v.fechaCreacion BETWEEN :fechaInicio AND :fechaFin " +
+          "AND v.estado != 'ANULADA' " +
+          "AND NOT EXISTS (SELECT 1 FROM Venta v2 WHERE v2.cliente = v.cliente AND v2.fechaCreacion < :fechaInicio)")
+  int countClientesNuevosEnPeriodo(@Param("fechaInicio") LocalDateTime fechaInicio,
+                                   @Param("fechaFin") LocalDateTime fechaFin);
+
+  @Query("SELECT v FROM Venta v WHERE v.fechaCreacion BETWEEN :inicio AND :fin AND v.usuario.id = :usuarioId AND v.estado = :estado")
+  List<Venta> findByFechaCreacionBetweenAndUsuarioIdAndEstado(
+          @Param("inicio") LocalDateTime inicio,
+          @Param("fin") LocalDateTime fin,
+          @Param("usuarioId") Long usuarioId,
+          @Param("estado") Venta.EstadoVenta estado);
+
+  @Query("SELECT v.numeroVenta FROM Venta v WHERE v.numeroVenta LIKE :prefijo ORDER BY v.numeroVenta DESC")
+  String findUltimoNumeroVentaParaFecha(@Param("prefijo") String prefijo);
+
+  Optional<Venta> findTopByNumeroVentaStartingWithOrderByNumeroVentaDesc(String prefijo);
 }

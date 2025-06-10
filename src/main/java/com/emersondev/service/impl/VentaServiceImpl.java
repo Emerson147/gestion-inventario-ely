@@ -1,6 +1,7 @@
 package com.emersondev.service.impl;
 
 import com.emersondev.api.request.DetalleVentaRequest;
+import com.emersondev.api.request.MovimientoInventarioRequest;
 import com.emersondev.api.request.VentaRequest;
 import com.emersondev.api.response.ReporteVentasResponse;
 import com.emersondev.api.response.VentaResponse;
@@ -25,6 +26,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.WeekFields;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -46,6 +48,8 @@ public class VentaServiceImpl implements VentaService {
   private final InventarioService inventarioService;
   private final VentaMapper ventaMapper;
   private final SerieGenerator serieGenerator;
+  private final InventarioRepository inventarioRepository;
+  private final MovimientoInventarioServiceImpl movimientoService;
 
   @Override
   @Transactional
@@ -66,6 +70,11 @@ public class VentaServiceImpl implements VentaService {
     Usuario usuario = usuarioRepository.findById(ventaRequest.getUsuarioId())
             .orElseThrow(() -> new ResourceNotFoundException("Usuario", "id", ventaRequest.getUsuarioId().toString()));
 
+    // Validar y agregar detalles de la venta
+    if (ventaRequest.getDetalles() == null || ventaRequest.getDetalles().isEmpty()) {
+      throw new BusinessException("La venta debe tener al menos un detalle");
+    }
+
     // Crear venta
     Venta venta = new Venta();
     venta.setNumeroVenta(serieGenerator.generarNumeroVenta());
@@ -77,76 +86,83 @@ public class VentaServiceImpl implements VentaService {
     venta.setObservaciones(ventaRequest.getObservaciones());
     venta.setEstado(Venta.EstadoVenta.PENDIENTE);
 
-    // Validar y agregar detalles de la venta
-    if (ventaRequest.getDetalles() == null || ventaRequest.getDetalles().isEmpty()) {
-      throw new BusinessException("La venta debe tener al menos un detalle");
-    }
-
     BigDecimal subtotal = BigDecimal.ZERO;
+    List<DetalleVenta> detalleVentas = new ArrayList<>();
 
     // Procesar cada detalle
     for (DetalleVentaRequest detalleRequest : ventaRequest.getDetalles()) {
-      // Validar producto
-      Producto producto = productoRepository.findById(detalleRequest.getProductoId())
-              .orElseThrow(() -> new ProductoNotFoundException(detalleRequest.getProductoId()));
-
-      // Validar color
-      Color color = colorRepository.findById(detalleRequest.getColorId())
-              .orElseThrow(() -> new ResourceNotFoundException("Color", "id", detalleRequest.getColorId().toString()));
-
-      // Validar que el color pertenezca al producto
-      if (!color.getProducto().getId().equals(producto.getId())) {
-        throw new BusinessException("El color seleccionado no pertenece al producto");
+      // Validar Cantidad
+      if (detalleRequest.getCantidad() <= 0 ) {
+        throw new BusinessException("La cantidad debe ser mayor a cero");
       }
 
-      // Validar talla
-      Talla talla = tallaRepository.findById(detalleRequest.getTallaId())
-              .orElseThrow(() -> new ResourceNotFoundException("Talla", "id", detalleRequest.getTallaId().toString()));
-
-      // Validar que la talla pertenezca al color
-      if (!talla.getColor().getId().equals(color.getId())) {
-        throw new BusinessException("La talla seleccionada no pertenece al color");
-      }
+      // Buscar inventario por ID
+      Inventario inventario = inventarioRepository.findById(detalleRequest.getInventarioId())
+              .orElseThrow(() -> new InventarioNotFoundException("No se encontro inventario con el id: " + detalleRequest.getInventarioId()));
 
       // Validar stock suficiente
-      Integer stockDisponible = inventarioService.obtenerStockPorVariante(
-              producto.getId(), color.getId(), talla.getId());
-
-      if (stockDisponible < detalleRequest.getCantidad()) {
+      if (inventario.getCantidad() < detalleRequest.getCantidad() ||
+              inventario.getEstado() == Inventario.EstadoInventario.AGOTADO ||
+              inventario.getEstado() == Inventario.EstadoInventario.RESERVADO) {
         throw new StockInsuficienteException(
-                "Stock insuficiente para el producto " + producto.getNombre() +
-                        " - Color: " + color.getNombre() + " - Talla: " + talla.getNumero(),
-                stockDisponible,
+                "Stock insuficiente o inventario no disponible para el producto " + inventario.getProducto().getNombre() +
+                        " - Color: " + inventario.getColor().getNombre() +
+                        " - Talla: " + inventario.getTalla().getNumero(),
+                inventario.getCantidad(),
                 detalleRequest.getCantidad());
       }
 
       // Crear detalle de venta
       DetalleVenta detalle = new DetalleVenta();
-      detalle.setProducto(producto);
-      detalle.setColor(color);
-      detalle.setTalla(talla);
+      detalle.setProducto(inventario.getProducto());
+      detalle.setColor(inventario.getColor());
+      detalle.setTalla(inventario.getTalla());
       detalle.setCantidad(detalleRequest.getCantidad());
-      detalle.setPrecioUnitario(producto.getPrecioVenta());
+      detalle.setPrecioUnitario(inventario.getProducto().getPrecioVenta());
       detalle.setProductDescription();
       detalle.calcularSubtotal();
-
       venta.addDetalle(detalle);
       subtotal = subtotal.add(detalle.getSubtotal());
-
-      // Actualizar stock
-      inventarioService.actualizarStockPorVenta(
-              producto.getId(), color.getId(), talla.getId(), detalleRequest.getCantidad());
+      detalleVentas.add(detalle);
     }
-
     // Establecer los totales
     venta.setSubtotal(subtotal);
     venta.setIgv(subtotal.multiply(new BigDecimal("0.18")).setScale(2, RoundingMode.HALF_EVEN));
     venta.setTotal(subtotal.add(venta.getIgv()).setScale(2, RoundingMode.HALF_EVEN));
+    // venta.setEstado(Venta.EstadoVenta.COMPLETADA);  Cambia a completada tras registrar movimiento
 
-    // Guardar la venta
-    venta = ventaRepository.save(venta);
+    // 1. Guarda la venta
+    try {
+      venta = ventaRepository.save(venta);
+    } catch (Exception e) {
+      log.error("Error al guardar la venta: {}", e.getMessage());
+      throw new BusinessException("No se pudo guardar la venta: " + e.getMessage());
+    }
+
+    // 2. Registrar movimientos de inventario usando el ID de inventario directamente
+    for (int i = 0; i < detalleVentas.size(); i++) {
+      DetalleVenta detalle = detalleVentas.get(i);
+      DetalleVentaRequest detalleRequest = ventaRequest.getDetalles().get(i); // mismo orden
+
+      MovimientoInventarioRequest movimientoRequest = new MovimientoInventarioRequest();
+      movimientoRequest.setInventarioId(detalleRequest.getInventarioId());
+      movimientoRequest.setVentaId(venta.getId());
+      movimientoRequest.setReferencia("Venta # " + venta.getNumeroVenta());
+      movimientoRequest.setTipo("SALIDA");
+      movimientoRequest.setCantidad(detalle.getCantidad());
+      movimientoRequest.setDescripcion("Venta de " + detalle.getCantidad() + " unidades de " +
+              detalle.getProducto().getNombre() + " - " + detalle.getColor().getNombre() + " - Talla " + detalle.getTalla().getNumero());
+      movimientoRequest.setUsuario(usuario.getUsername());
+
+      try {
+        movimientoService.registrarMovimiento(movimientoRequest);
+      } catch (Exception e) {
+        log.error("Error al registrar movimiento para detalle {}: {}", detalle.getId(), e.getMessage());
+        throw new BusinessException("No se pudo registrar el movimiento de inventario: " + e.getMessage());
+      }
+    }
+
     log.info("Venta registrada exitosamente con número: {}", venta.getNumeroVenta());
-
     return ventaMapper.toResponse(venta);
   }
 
@@ -272,9 +288,32 @@ public class VentaServiceImpl implements VentaService {
     Venta venta = ventaRepository.findById(id)
             .orElseThrow(() -> new VentaNotFoundException(id));
 
-    // Verificar que la venta no esté ya anulada
     if (Venta.EstadoVenta.ANULADA.equals(venta.getEstado())) {
       throw new BusinessException("La venta ya se encuentra anulada");
+    }
+
+    // Registrar movimientos de entrada para devolver stock
+    for (DetalleVenta detalle : venta.getDetalles()) {
+      Inventario inventario = inventarioRepository.findByProductoIdAndColorIdAndTallaIdOrderByFechaCreacionAsc(
+                      detalle.getProducto().getId(), detalle.getColor().getId(), detalle.getTalla().getId())
+              .stream().findFirst()
+              .orElseThrow(() -> new InventarioNotFoundException("No se encontró inventario para la variante"));
+
+      MovimientoInventarioRequest movimientoRequest = new MovimientoInventarioRequest();
+      movimientoRequest.setInventarioId(inventario.getId());
+      movimientoRequest.setVentaId(venta.getId());
+      movimientoRequest.setReferencia("Anulación Venta #" + venta.getNumeroVenta());
+      movimientoRequest.setTipo("ENTRADA");
+      movimientoRequest.setCantidad(detalle.getCantidad());
+      movimientoRequest.setDescripcion("Devolución por anulación de " + detalle.getCantidad() + " unidades de " +
+              detalle.getProducto().getNombre() + " - " + detalle.getColor().getNombre() + " - Talla " + detalle.getTalla().getNumero());
+
+      String usuarioActual = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication() != null
+              ? org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName()
+              : "system";
+      movimientoRequest.setUsuario(usuarioActual);
+
+      movimientoService.registrarMovimiento(movimientoRequest);
     }
 
     // Actualizar estado y observaciones
@@ -283,18 +322,6 @@ public class VentaServiceImpl implements VentaService {
     venta.setObservaciones((observaciones != null ? observaciones + " | " : "") +
             "ANULADA: " + motivo + " [" + LocalDateTime.now() + "]");
 
-    // Devolver stock al inventario
-    for (DetalleVenta detalle : venta.getDetalles()) {
-      Long productoId = detalle.getProducto().getId();
-      Long colorId = detalle.getColor().getId();
-      Long tallaId = detalle.getTalla().getId();
-
-      // Devolver stock al inventario
-      inventarioService.devolverStockPorAnulacion(
-              productoId, colorId, tallaId, detalle.getCantidad());
-    }
-
-    // Guardar la venta actualizada
     venta = ventaRepository.save(venta);
     log.info("Venta anulada exitosamente");
 
@@ -310,23 +337,29 @@ public class VentaServiceImpl implements VentaService {
     Venta venta = ventaRepository.findById(id)
             .orElseThrow(() -> new VentaNotFoundException(id));
 
-    // Solo permitir eliminar ventas en estado PENDIENTE
     if (!Venta.EstadoVenta.PENDIENTE.equals(venta.getEstado())) {
       throw new BusinessException("Solo se pueden eliminar ventas en estado PENDIENTE");
     }
 
-    // Devolver stock al inventario antes de eliminar
+    // Registrar movimientos de entrada para devolver stock
     for (DetalleVenta detalle : venta.getDetalles()) {
-      Long productoId = detalle.getProducto().getId();
-      Long colorId = detalle.getColor().getId();
-      Long tallaId = detalle.getTalla().getId();
+      Inventario inventario = inventarioRepository.findByProductoIdAndColorIdAndTallaIdOrderByFechaCreacionAsc(
+                      detalle.getProducto().getId(), detalle.getColor().getId(), detalle.getTalla().getId())
+              .stream().findFirst()
+              .orElseThrow(() -> new InventarioNotFoundException("No se encontró inventario para la variante"));
 
-      // Devolver stock al inventario
-      inventarioService.devolverStockPorAnulacion(
-              productoId, colorId, tallaId, detalle.getCantidad());
+      MovimientoInventarioRequest movimientoRequest = new MovimientoInventarioRequest();
+      movimientoRequest.setInventarioId(inventario.getId());
+      movimientoRequest.setVentaId(venta.getId());
+      movimientoRequest.setReferencia("Eliminación Venta #" + venta.getNumeroVenta());
+      movimientoRequest.setTipo("ENTRADA");
+      movimientoRequest.setCantidad(detalle.getCantidad());
+      movimientoRequest.setDescripcion("Devolución por eliminación de " + detalle.getCantidad() + " unidades de " +
+              detalle.getProducto().getNombre() + " - " + detalle.getColor().getNombre() + " - Talla " + detalle.getTalla().getNumero());
+      movimientoRequest.setUsuario("system");
+      movimientoService.registrarMovimiento(movimientoRequest);
     }
 
-    // Eliminar la venta y sus detalles (cascade)
     ventaRepository.delete(venta);
     log.info("Venta eliminada exitosamente");
   }
@@ -344,10 +377,8 @@ public class VentaServiceImpl implements VentaService {
     if (Venta.EstadoVenta.ANULADA.equals(venta.getEstado()) && !Venta.EstadoVenta.ANULADA.equals(nuevoEstado)) {
       throw new BusinessException("Una venta anulada no puede cambiar de estado");
     }
-
     // Actualizar estado
     venta.setEstado(nuevoEstado);
-
     // Guardar cambios
     venta = ventaRepository.save(venta);
     log.info("Estado de venta actualizado exitosamente");
@@ -441,7 +472,7 @@ public class VentaServiceImpl implements VentaService {
     List<Map.Entry<Long, BigDecimal>> topClientes = ventasPorCliente.entrySet().stream()
             .sorted(Map.Entry.<Long, BigDecimal>comparingByValue().reversed())
             .limit(5)
-            .collect(Collectors.toList());
+            .toList();
 
     for (Map.Entry<Long, BigDecimal> entry : topClientes) {
       Clientes cliente = clienteRepository.findById(entry.getKey())
@@ -459,7 +490,7 @@ public class VentaServiceImpl implements VentaService {
     List<Map.Entry<Long, Integer>> topProductos = productosMasVendidos.entrySet().stream()
             .sorted(Map.Entry.<Long, Integer>comparingByValue().reversed())
             .limit(5)
-            .collect(Collectors.toList());
+            .toList();
 
     for (Map.Entry<Long, Integer> entry : topProductos) {
       Producto producto = productoRepository.findById(entry.getKey())
@@ -544,7 +575,7 @@ public class VentaServiceImpl implements VentaService {
     List<Map.Entry<Long, Integer>> topProductos = productosCantidad.entrySet().stream()
             .sorted(Map.Entry.<Long, Integer>comparingByValue().reversed())
             .limit(10)
-            .collect(Collectors.toList());
+            .toList();
 
     List<Map<String, Object>> productosDetalle = new ArrayList<>();
     for (Map.Entry<Long, Integer> entry : topProductos) {
@@ -780,7 +811,7 @@ public class VentaServiceImpl implements VentaService {
     List<Map.Entry<Long, Integer>> topProductos = productosCantidad.entrySet().stream()
             .sorted(Map.Entry.<Long, Integer>comparingByValue().reversed())
             .limit(5)
-            .collect(Collectors.toList());
+            .toList();
 
     List<Map<String, Object>> productosDetalle = new ArrayList<>();
     for (Map.Entry<Long, Integer> entry : topProductos) {
@@ -800,6 +831,103 @@ public class VentaServiceImpl implements VentaService {
     resumen.put("productosFavoritos", productosDetalle);
 
     return resumen;
+  }
+
+  @Override
+  @Transactional
+  public Map<String, Object> obtenerVentasDiarias(LocalDate fecha, Long usuarioId) {
+    log.info("Generando reporte de ventas diarias para fecha {} y usuario {}", fecha, usuarioId);
+    LocalDateTime inicio = fecha.atStartOfDay();
+    LocalDateTime fin = fecha.atTime(23, 59, 59);
+
+    List<Venta> ventas = ventaRepository.findByFechaCreacionBetweenAndUsuarioIdAndEstado(
+            inicio, fin, usuarioId, Venta.EstadoVenta.COMPLETADA);
+
+    Map<String, Object> resultado = new HashMap<>();
+    resultado.put("fecha", fecha);
+    resultado.put("totalVentas", ventas.size());
+    resultado.put("totalIngresos", ventas.stream()
+            .map(Venta::getTotal)
+            .reduce(BigDecimal.ZERO, BigDecimal::add));
+    resultado.put("totalIgv", ventas.stream()
+            .map(Venta::getIgv)
+            .reduce(BigDecimal.ZERO, BigDecimal::add));
+    return resultado;
+  }
+
+  @Override
+  @Transactional
+  public Map<String, Object> obtenerVentasSemanales(LocalDate fechaReferencia, Long usuarioId) {
+    log.info("Generando reporte de ventas semanales para fecha {} y usuario {}", fechaReferencia, usuarioId);
+    int semana = fechaReferencia.get(WeekFields.ISO.weekOfWeekBasedYear());
+    int año = fechaReferencia.getYear();
+    LocalDateTime inicio = LocalDate.of(año, 1, 1)
+            .with(WeekFields.ISO.weekOfWeekBasedYear(), semana)
+            .atStartOfDay();
+    LocalDateTime fin = inicio.plusDays(7)
+            .withHour(23).withMinute(59).withSecond(59);
+
+    List<Venta> ventas = ventaRepository.findByFechaCreacionBetweenAndUsuarioIdAndEstado(
+            inicio, fin, usuarioId, Venta.EstadoVenta.COMPLETADA);
+
+    Map<String, Object> resultado = new HashMap<>();
+    resultado.put("semana", semana);
+    resultado.put("año", año);
+    resultado.put("totalVentas", ventas.size());
+    resultado.put("totalIngresos", ventas.stream()
+            .map(Venta::getTotal)
+            .reduce(BigDecimal.ZERO, BigDecimal::add));
+    resultado.put("totalIgv", ventas.stream()
+            .map(Venta::getIgv)
+            .reduce(BigDecimal.ZERO, BigDecimal::add));
+    return resultado;
+  }
+
+  @Override
+  public Map<String, Object> obtenerVentasMensuales(int mes, int año, Long usuarioId) {
+    log.info("Generando reporte de ventas mensuales para mes {} y año {} y usuario {}", mes, año, usuarioId);
+    LocalDateTime inicio = LocalDateTime.of(año, mes, 1, 0, 0);
+    LocalDateTime fin = inicio.plusMonths(1).minusSeconds(1);
+
+    List<Venta> ventas = ventaRepository.findByFechaCreacionBetweenAndUsuarioIdAndEstado(
+            inicio, fin, usuarioId, Venta.EstadoVenta.COMPLETADA);
+
+    Map<String, Object> resultado = new HashMap<>();
+    resultado.put("mes", mes);
+    resultado.put("año", año);
+    resultado.put("totalVentas", ventas.size());
+    resultado.put("totalIngresos", ventas.stream()
+            .map(Venta::getTotal)
+            .reduce(BigDecimal.ZERO, BigDecimal::add));
+    resultado.put("totalIgv", ventas.stream()
+            .map(Venta::getIgv)
+            .reduce(BigDecimal.ZERO, BigDecimal::add));
+    return resultado;
+  }
+
+  @Override
+  public Map<String, Object> obtenerTopVendedores(LocalDate fechaInicio, LocalDate fechaFin, int limit, Long usuarioId) {
+    return Map.of();
+  }
+
+  @Override
+  public Map<String, Object> obtenerTopProductos(LocalDate fechaInicio, LocalDate fechaFin, int limit, Long usuarioId) {
+    return Map.of();
+  }
+
+  @Override
+  public Map<String, Object> obtenerProductosSinMovimiento(int dias, int limit, Long usuarioId) {
+    return Map.of();
+  }
+
+  @Override
+  public List<Venta> findByFechaAndAlmacen(LocalDate fecha, Almacen almacen) {
+    return List.of();
+  }
+
+  @Override
+  public List<Venta> findByFecha(LocalDate fecha) {
+    return List.of();
   }
 
   /**

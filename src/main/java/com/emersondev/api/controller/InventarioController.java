@@ -4,6 +4,7 @@ import com.emersondev.api.request.InventarioRequest;
 import com.emersondev.api.request.TransferenciaInventarioRequest;
 import com.emersondev.api.response.InventarioResponse;
 import com.emersondev.api.response.MensajeResponse;
+import com.emersondev.api.response.PagedResponse;
 import com.emersondev.service.interfaces.InventarioService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -39,9 +40,14 @@ public class InventarioController {
    */
   @GetMapping
   @PreAuthorize("hasRole('ADMIN') or hasRole('VENTAS')")
-  public ResponseEntity<List<InventarioResponse>> obtenerTodoElInventario() {
-    List<InventarioResponse> inventario = inventarioService.obtenerTodoElInventario();
-    return ResponseEntity.ok(inventario);
+  public ResponseEntity<PagedResponse<InventarioResponse>> obtenerInventarios(
+          @RequestParam(defaultValue = "0") Integer page,
+          @RequestParam(defaultValue = "10") Integer size,
+          @RequestParam(defaultValue = "id") String sortBy,
+          @RequestParam(defaultValue = "asc") String sortDir
+  ) {
+    PagedResponse<InventarioResponse> response = inventarioService.obtenerInventarios(page, size, sortBy, sortDir);
+    return ResponseEntity.ok(response);
   }
 
   /**

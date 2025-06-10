@@ -41,4 +41,6 @@ public interface FileStorageService {
    */
   void validateImageFile(MultipartFile file) throws BusinessException;
 
+
+
 }

@@ -398,7 +398,7 @@ public class DocumentoGeneratorServiceImpl implements DocumentoGeneratorService 
     // Información del usuario
     Map<String, Object> usuarioInfo = new HashMap<>();
     usuarioInfo.put("id", comprobante.getUsuario().getId());
-    usuarioInfo.put("nombre", comprobante.getUsuario().getNombre());
+    usuarioInfo.put("nombre", comprobante.getUsuario().getNombres());
     usuarioInfo.put("username", comprobante.getUsuario().getUsername());
     datos.put("usuario", usuarioInfo);
 

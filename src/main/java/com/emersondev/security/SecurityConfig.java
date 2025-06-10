@@ -56,11 +56,8 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth ->
                     auth    .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                            .requestMatchers("/api/files/uploads/**").permitAll()
                             .requestMatchers("/api/auth/**").permitAll()
-//                            .requestMatchers("/api/books/**").permitAll()  // Allow book browsing without authentication
-//                            .requestMatchers("/api/categories/**").permitAll()
-//                            .requestMatchers("/api/docs/**").permitAll()
-//                            .requestMatchers("/swagger-ui/**").permitAll()
                             .anyRequest().authenticated()
             );
     http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);

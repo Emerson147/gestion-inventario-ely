@@ -3,7 +3,6 @@ package com.emersondev.api.controller;
 import com.emersondev.api.response.FileResponse;
 import com.emersondev.api.response.MensajeResponse;
 import com.emersondev.service.interfaces.FileStorageService;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
@@ -15,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -84,7 +82,7 @@ public class FileController {
    * @param fileName nombre del archivo
    * @return el archivo como recurso
    */
-  @GetMapping("/{fileName:.+}")
+  @GetMapping("/uploads/{fileName:.+}")
   public ResponseEntity<Resource> downloadFile(@PathVariable String fileName) {
     Resource resource = fileStorageService.loadFileAsResource(fileName);
 
@@ -113,9 +111,11 @@ public class FileController {
     }
   }
 
+
   @PostMapping("/validate-image")
   public ResponseEntity<String> validateImageFile(@RequestParam("file") MultipartFile file) {
     fileStorageService.validateImageFile(file);
     return ResponseEntity.ok("La imagen es válida");
   }
+
 }

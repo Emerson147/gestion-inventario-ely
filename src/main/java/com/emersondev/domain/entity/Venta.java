@@ -64,6 +64,9 @@ public class Venta {
   @OneToMany(mappedBy = "venta", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<DetalleVenta> detalles = new ArrayList<>();
 
+  @OneToMany(mappedBy = "venta", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<MovimientoInventario> movimientos = new ArrayList<>();
+
   @CreationTimestamp
   @Column(updatable = false)
   private LocalDateTime fechaCreacion;
@@ -77,6 +80,11 @@ public class Venta {
 
   public enum TipoComprobante {
     BOLETA, FACTURA, NOTA_VENTA, TICKET
+  }
+
+  public void addMovimiento(MovimientoInventario movimiento) {
+    movimientos.add(movimiento);
+    movimiento.setVenta(this);
   }
 
   /**
@@ -93,5 +101,26 @@ public class Venta {
   public void removeDetalle(DetalleVenta detalle) {
     detalles.remove(detalle);
     detalle.setVenta(null);
+  }
+
+  public void setSubtotal(BigDecimal subtotal) {
+    if (subtotal.compareTo(BigDecimal.ZERO) < 0) {
+      throw new IllegalArgumentException("El subtotal no puede ser negativo");
+    }
+    this.subtotal = subtotal;
+  }
+
+  public void setIgv(BigDecimal igv) {
+    if (igv.compareTo(BigDecimal.ZERO) < 0) {
+      throw new IllegalArgumentException("El IGV no puede ser negativo");
+    }
+    this.igv = igv;
+  }
+
+  public void setTotal(BigDecimal total) {
+    if (total.compareTo(BigDecimal.ZERO) < 0) {
+      throw new IllegalArgumentException("El total no puede ser negativo");
+    }
+    this.total = total;
   }
 }

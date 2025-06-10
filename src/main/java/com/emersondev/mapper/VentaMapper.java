@@ -48,7 +48,7 @@ public class VentaMapper {
     if (venta.getUsuario() != null) {
       VentaResponse.UsuarioInfo usuario = new VentaResponse.UsuarioInfo();
       usuario.setId(venta.getUsuario().getId());
-      usuario.setNombre(venta.getUsuario().getNombre());
+      usuario.setNombre(venta.getUsuario().getNombres());
       usuario.setUsername(venta.getUsuario().getUsername());
       response.setUsuario(usuario);
     }

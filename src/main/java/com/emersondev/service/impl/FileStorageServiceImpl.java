@@ -82,17 +82,18 @@ public class FileStorageServiceImpl implements FileStorageService {
    * @return Nombre único para el archivo
    */
   private String generateUniqueFileName(String originalFilename) {
-    //Extraer la extension del archivo
+    // Extraer la extensión del archivo correctamente
     String fileExtension = "";
-    if (originalFilename.contains("..")) {
-      fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
+    int lastDotIndex = originalFilename.lastIndexOf(".");
+    if (lastDotIndex > 0) {  // Verificar que existe un punto y no está al inicio
+      fileExtension = originalFilename.substring(lastDotIndex + 1);  // Tomar solo la parte después del punto
     }
 
-    //Generar un formato con fecha/hora actual y UUID para garantizar unicidad
-    String timestap = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+    // Generar un formato con fecha/hora actual y UUID para garantizar unicidad
+    String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
     String uuid = UUID.randomUUID().toString().substring(0, 8);
 
-    return "file_" + timestap + "_" + uuid + "." + fileExtension;
+    return "file_" + timestamp + "_" + uuid + (fileExtension.isEmpty() ? "" : "." + fileExtension);
   }
 
   @Override

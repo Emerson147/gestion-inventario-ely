@@ -3,6 +3,8 @@ package com.emersondev.service.interfaces;
 import com.emersondev.api.request.VentaRequest;
 import com.emersondev.api.response.ReporteVentasResponse;
 import com.emersondev.api.response.VentaResponse;
+import com.emersondev.domain.entity.Almacen;
+import com.emersondev.domain.entity.Venta;
 import com.emersondev.domain.entity.Venta.EstadoVenta;
 
 import java.time.LocalDate;
@@ -54,8 +56,20 @@ public interface VentaService {
 
   Map<String, Object> obtenerEstadisticasPorModelo(LocalDate fechaInicio, LocalDate fechaFin);
 
-
   Map<String, Object> obtenerResumenComprasPorCliente(Long clienteId);
 
+  Map<String, Object> obtenerVentasDiarias(LocalDate fecha, Long usuarioId);
 
+  Map<String, Object> obtenerVentasSemanales(LocalDate fechaReferencia, Long usuarioId);
+
+  Map<String, Object> obtenerVentasMensuales(int mes, int año, Long usuarioId);
+
+  Map<String, Object> obtenerTopVendedores(LocalDate fechaInicio, LocalDate fechaFin, int limit, Long usuarioId);
+
+  Map<String, Object> obtenerTopProductos(LocalDate fechaInicio, LocalDate fechaFin, int limit, Long usuarioId);
+
+  Map<String, Object> obtenerProductosSinMovimiento(int dias, int limit, Long usuarioId);
+
+  List<Venta> findByFechaAndAlmacen(LocalDate fecha, Almacen almacen);
+  List<Venta> findByFecha(LocalDate fecha);
 }

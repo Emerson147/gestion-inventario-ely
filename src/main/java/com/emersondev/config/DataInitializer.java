@@ -18,9 +18,9 @@ public class DataInitializer {
         rolRepository.save(adminRole);
       }
 
-      if (rolRepository.findByNombre(Rol.NombreRol.ROLE_VENDEDOR).isEmpty()) {
+      if (rolRepository.findByNombre(Rol.NombreRol.ROLE_VENTAS).isEmpty()) {
         Rol vendedorRole = new Rol();
-        vendedorRole.setNombre(Rol.NombreRol.ROLE_VENDEDOR);
+        vendedorRole.setNombre(Rol.NombreRol.ROLE_VENTAS);
         rolRepository.save(vendedorRole);
       }
     };

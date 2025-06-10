@@ -76,4 +76,18 @@ public class DetalleVenta {
       this.descripcionProducto = sb.toString();
     }
   }
+
+  public void setPrecioUnitario(BigDecimal precioUnitario) {
+    if (precioUnitario.compareTo(BigDecimal.ZERO) <= 0) {
+      throw new IllegalArgumentException("El precio unitario debe ser mayor a cero");
+    }
+    this.precioUnitario = precioUnitario;
+  }
+
+  public void setCantidad(Integer cantidad) {
+    if (cantidad <= 0) {
+      throw new IllegalArgumentException("La cantidad debe ser mayor a cero");
+    }
+    this.cantidad = cantidad;
+  }
 }

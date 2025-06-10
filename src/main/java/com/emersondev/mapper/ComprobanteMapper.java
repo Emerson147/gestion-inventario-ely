@@ -52,7 +52,7 @@ public class ComprobanteMapper {
     if (comprobante.getUsuario() != null) {
       ComprobanteResponse.UsuarioInfo usuarioInfo = new ComprobanteResponse.UsuarioInfo();
       usuarioInfo.setId(comprobante.getUsuario().getId());
-      usuarioInfo.setNombre(comprobante.getUsuario().getNombre());
+      usuarioInfo.setNombre(comprobante.getUsuario().getNombres());
       usuarioInfo.setUsername(comprobante.getUsuario().getUsername());
       response.setUsuario(usuarioInfo);
     }

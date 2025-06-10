@@ -87,4 +87,9 @@ public interface ComprobanteRepository extends JpaRepository<Comprobante, Long> 
           @Param("estado") Comprobante.EstadoComprobante estado,
           @Param("inicio") LocalDateTime inicio,
           @Param("fin") LocalDateTime fin);
+
+  // Ya lo tienes para el número correlativo, pero si necesitas cambiar la serie, añade métodos así:
+  @Query("SELECT MAX(c.serie) FROM Comprobante c WHERE c.tipoDocumento = :tipo")
+  String findMaxSerieByTipo(@Param("tipo") Comprobante.TipoDocumento tipo);
+
 }

@@ -2,16 +2,20 @@ package com.emersondev.service.impl;
 
 import com.emersondev.api.request.InventarioRequest;
 import com.emersondev.api.response.InventarioResponse;
+import com.emersondev.api.response.PagedResponse;
 import com.emersondev.domain.entity.*;
 import com.emersondev.domain.exception.*;
 import com.emersondev.domain.repository.*;
 import com.emersondev.mapper.InventarioMapper;
 import com.emersondev.service.interfaces.InventarioService;
+import com.emersondev.util.PaginationUtils;
 import com.emersondev.util.SerieGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +37,7 @@ public class InventarioServiceImpl implements InventarioService {
   private final InventarioMapper inventarioMapper;
   private final SerieGenerator serieGenerator;
   private final VentaRepository ventaRepository;
+  private final UsuarioRepository usuarioRepository;
 
   @Override
   @Transactional
@@ -103,13 +108,29 @@ public class InventarioServiceImpl implements InventarioService {
   @Override
   @Transactional
   @Cacheable(value = "inventario")
-  public List<InventarioResponse> obtenerTodoElInventario() {
-    log.debug("Obteniendo todo el inventario");
-    List<Inventario> inventarios = inventarioRepository.findAll();
+  public PagedResponse<InventarioResponse> obtenerInventarios(Integer page, Integer size, String sortBy, String sortDir) {
+    log.debug("Obteniendo inventarios con paginación: página {}, tamaño {}, orden por {} {}", page, size, sortBy, sortDir);
 
-    return inventarios.stream()
-            .map(inventarioMapper::toResponse)
-            .collect(Collectors.toList());
+    // Validamos parametros de paginacion
+    int[] validataParams = PaginationUtils.validatePaginationParams(page, size);
+    page = validataParams[0];
+    size = validataParams[1];
+
+    // Crear el objeto pageable
+    Pageable pageable = PaginationUtils.createPageable(page, size, sortBy, sortDir);
+
+    // Ejecutar la consulta paginada
+    Page<Inventario> inventarioPage =  inventarioRepository.findAll(pageable);
+
+    // Si no hay resultados, devolver una respuesta vacia
+    if (inventarioPage.isEmpty()) {
+      log.info("No se encontraron inventarios");
+      return PaginationUtils.emptyPagedResponse(page, size);
+    }
+
+    // Convertir y devolver las respuestas paginadas
+    return PaginationUtils.createPagedResponse(inventarioPage, inventarioMapper::toResponse);
+
   }
 
   @Override

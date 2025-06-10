@@ -43,6 +43,7 @@ public class ColorMapper {
   }
 
   public void mapTallas(Color color, List<TallaRequest> tallasRequest) {
+
     for (TallaRequest tallaRequest : tallasRequest) {
       Talla talla = new Talla();
       talla.setNumero(tallaRequest.getNumero());
@@ -59,6 +60,7 @@ public class ColorMapper {
     ColorResponse response = new ColorResponse();
     response.setId(color.getId());
     response.setNombre(color.getNombre());
+    response.setCodigoHex(color.getCodigoHex()); // Mapeo del nuevo campo
 
     if (color.getTallas() != null) {
       response.setTallas(color.getTallas().stream()

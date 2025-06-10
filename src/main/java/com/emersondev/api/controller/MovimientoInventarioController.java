@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 
 @RestController
-@RequestMapping("/api/inventario/movimientos")
+@RequestMapping("/api/movimientos")
 @RequiredArgsConstructor
 public class MovimientoInventarioController {
 
@@ -26,7 +26,7 @@ public class MovimientoInventarioController {
   @PreAuthorize("hasRole('ADMIN') or hasRole('VENTAS')")
   public ResponseEntity<MovimientoInventarioResponse> registrarMovimiento(
           @Valid @RequestBody MovimientoInventarioRequest movimientoRequest) {
-    MovimientoInventarioResponse movimiento = movimientoService.registrarMovimiento(movimientoRequest);
+       MovimientoInventarioResponse movimiento = movimientoService.registrarMovimiento(movimientoRequest);
     return new ResponseEntity<>(movimiento, HttpStatus.CREATED);
   }
 

@@ -1,15 +1,20 @@
 package com.emersondev.util;
 
-import com.emersondev.domain.entity.Color;
-import com.emersondev.domain.entity.Factura;
-import com.emersondev.domain.entity.Producto;
-import com.emersondev.domain.entity.Talla;
+import com.emersondev.domain.entity.*;
+import com.emersondev.domain.repository.ComprobanteRepository;
+import com.emersondev.domain.repository.VentaRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -18,7 +23,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Component
 @Slf4j
+@RequiredArgsConstructor
 public class SerieGenerator {
+
+  private final VentaRepository ventaRepository;
+  private final ComprobanteRepository comprobanteRepository;
 
   private static final String CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   private static final int CODIGO_PRODUCTO_LENGTH = 8;
@@ -34,14 +43,28 @@ public class SerieGenerator {
    * Genera un código único para un producto
    * @return código alfanumérico de producto
    */
-  public String generarCodigoProducto() {
+  public String generarCodigoProducto(Producto producto) {
     StringBuilder sb = new StringBuilder();
-    sb.append("ZPT"); // Prefijo para zapatos
 
-    // Agregar 5 caracteres aleatorios
-    for (int i = 0; i < CODIGO_PRODUCTO_LENGTH - 3; i++) {
+   // Usar 3 primeras letras del nombre o codigo del producto
+    if (producto != null && producto.getNombre() != null) {
+      sb.append(producto.getNombre().substring(0, 3).toUpperCase()).append("-");
+    } else {
+      sb.append("PRD-");
+    }
+
+    // Usar 3 primeras letras de las marca
+    if (producto != null && producto.getMarca() != null) {
+      sb.append(producto.getMarca().substring(0, 3).toUpperCase()).append("-");
+    } else {
+      sb.append("MAR-");
+    }
+
+    // Agregar 2 caracteres aleatorios
+    for (int i = 0; i < 3; i++) {
       sb.append(CHARS.charAt(RANDOM.nextInt(CHARS.length())));
     }
+
 
     return sb.toString();
   }
@@ -55,17 +78,24 @@ public class SerieGenerator {
    */
   public String generarSerieInventario(Producto producto, Color color, Talla talla) {
     StringBuilder sb = new StringBuilder();
-
+    
     // Usar primera letra del nombre o código del producto
     if (producto != null && producto.getCodigo() != null) {
-      sb.append(producto.getCodigo().substring(0, 3));
+      sb.append(producto.getCodigo().substring(0, 3).toUpperCase()).append("-");
     } else {
-      sb.append("PRD");
+      sb.append("PRD-");
+    }
+
+    // Usar las 3 letra de la marca
+    if (producto != null && producto.getMarca() != null ) {
+      sb.append(producto.getMarca().substring(0, 3).toUpperCase()).append("-");
+    } else {
+      sb.append("MAR-");
     }
 
     // Agregar primera letra del color
     if (color != null && color.getNombre() != null && !color.getNombre().isEmpty()) {
-      sb.append(color.getNombre().substring(0, 1).toUpperCase());
+      sb.append(color.getNombre().substring(0, 2).toUpperCase());
     } else {
       sb.append("X");
     }
@@ -89,35 +119,42 @@ public class SerieGenerator {
   }
 
   /**
+   * Genera un código único para pago
+   * @return código único
+   */
+  public String generarNumeroPago(Long venta) {
+    String fecha = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+    StringBuilder sb = new StringBuilder();
+    sb.append("PAG-").append(fecha).append("-").append(venta);
+
+    // Agregar 3 caracteres aleatorios
+    for (int i = 0; i < 3; i++) {
+      sb.append(CHARS.charAt(RANDOM.nextInt(CHARS.length())));
+    }
+
+    return sb.toString();
+  }
+
+
+  /**
    * Genera un número único para una venta
    * @return número de venta
    */
   public String generarNumeroVenta() {
-    String fecha = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-    int sequence = ventaCounter.getAndIncrement();
+    String fecha = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+    String prefijo = "V-" + fecha + "-";
 
-    return String.format("V-%s-%04d", fecha, sequence);
-  }
+    // Usando el método sugerido arriba
+    Optional<Venta> ultimaVenta = ventaRepository.findTopByNumeroVentaStartingWithOrderByNumeroVentaDesc(prefijo);
 
-  /**
-   * Genera un número único para una factura
-   * @param tipoComprobante el tipo de comprobante
-   * @return número de factura o boleta
-   */
-  public String generarNumeroFactura(Factura.TipoComprobante tipoComprobante) {
-    String fecha = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-    String prefijo;
-    int sequence;
-
-    if (tipoComprobante == Factura.TipoComprobante.FACTURA) {
-      prefijo = "F";
-      sequence = facturaCounter.getAndIncrement();
-    } else {
-      prefijo = "B";
-      sequence = boletaCounter.getAndIncrement();
+    int nextCorrelativo = 1;
+    if (ultimaVenta.isPresent()) {
+      String ultimoNumero = ultimaVenta.get().getNumeroVenta();
+      String correlativoStr = ultimoNumero.substring(ultimoNumero.lastIndexOf("-") + 1);
+      nextCorrelativo = Integer.parseInt(correlativoStr) + 1;
     }
 
-    return String.format("%s-%s-%04d", prefijo, fecha, sequence);
+    return String.format("%s%04d", prefijo, nextCorrelativo);
   }
 
   /**
@@ -144,8 +181,25 @@ public class SerieGenerator {
             ventaSeq, facturaSeq, boletaSeq);
   }
 
-  // En SerieGenerator
-  public String generarSerieInventarioSimplificado(Producto producto) {
-    return "INV-" + producto.getCodigo();
+  /**
+   * Obtiene la siguiente serie disponible para un tipo de comprobante.
+   * Si la serie actual llegó al máximo correlativo (ejemplo: 99999999), pasa a la siguiente serie.
+   */
+  public String obtenerSiguienteSerie(Comprobante.TipoDocumento tipo, String serieActual) {
+    // Opcional: define el máximo correlativo permitido por serie
+    String maxCorrelativo = "99999999";
+    String ultimoNumero = comprobanteRepository.findMaxNumeroByTipoAndSerie(tipo, serieActual);
+
+    // Si la serie está llena, incrementa la serie
+    if (ultimoNumero != null && ultimoNumero.equals(maxCorrelativo)) {
+      // Asume formato F001, B001, etc.
+      String prefijo = serieActual.substring(0, 1);
+      int numeroSerie = Integer.parseInt(serieActual.substring(1));
+      int nuevaSerie = numeroSerie + 1;
+      return String.format("%s%03d", prefijo, nuevaSerie);
+    }
+    // Si no está llena, sigue usando la misma serie
+    return serieActual;
   }
+
 }

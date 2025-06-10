@@ -1,5 +1,6 @@
 package com.emersondev.api.response;
 
+import com.emersondev.domain.entity.Inventario;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -18,6 +19,7 @@ public class InventarioResponse {
   private TallaSimpleResponse talla;
   private AlmacenSimpleResponse almacen;
   private Integer cantidad;
+  private Inventario.EstadoInventario estado;
   private LocalDateTime fechaCreacion;
   private LocalDateTime fechaActualizacion;
 

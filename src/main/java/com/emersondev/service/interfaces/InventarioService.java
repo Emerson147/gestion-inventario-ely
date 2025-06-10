@@ -22,7 +22,7 @@ public interface InventarioService {
    * Obtiene todos los registros de inventario
    * @return lista de todo el inventario
    */
-  List<InventarioResponse> obtenerTodoElInventario();
+  PagedResponse<InventarioResponse> obtenerInventarios(Integer page, Integer size, String sortBy, String sortDir);
 
   /**
    * Obtiene un registro de inventario por su ID

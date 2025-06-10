@@ -59,12 +59,11 @@ public class ProductoServiceImpl implements ProductoService {
 
 
     if (producto.getCodigo() == null || producto.getCodigo().isEmpty()) {
-      producto.setCodigo(serieGenerator.generarCodigoProducto());
+      producto.setCodigo(serieGenerator.generarCodigoProducto(producto ));
       log.info("Código generado automáticamente: '{}'", producto.getCodigo());
     } else {
       log.info("Usando código proporcionado: '{}'", producto.getCodigo());
     }
-
 
     //Guardar el producto en la base de datos
     producto = productoRepository.save(producto);
@@ -211,11 +210,11 @@ public class ProductoServiceImpl implements ProductoService {
       throw new ProductoNotFoundException(id);
     }
 
-    //Verificar si el producto tiene inventario asociado
-    if (inventarioRepository.existsById(id)) {
-      log.error("No se puede eliminar el producto con ID: {} porque tiene inventario asociado", id);
-      throw new BusinessException("No se puede eliminar el producto porque tiene inventario asociado");
-    }
+//    //Verificar si el producto tiene inventario asociado
+//    if (inventarioRepository.existsById(id)) {
+//      log.error("No se puede eliminar el producto con ID: {} porque tiene inventario asociado", id);
+//      throw new BusinessException("No se puede eliminar el producto porque tiene inventario asociado");
+//    }
 
     //Eliminar el producto
     productoRepository.deleteById(id);

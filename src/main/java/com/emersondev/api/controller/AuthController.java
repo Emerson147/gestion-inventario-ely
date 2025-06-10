@@ -12,7 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("api/auth")
+@RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController {
 
@@ -44,7 +44,6 @@ public class AuthController {
     authService.logout(token);
     return ResponseEntity.ok(new MensajeResponse("Sesión cerrada correctamente"));
   }
-
 
   @GetMapping("/validar-token")
   public ResponseEntity<MensajeResponse> validarToken(@RequestHeader("Authorization") String token) {

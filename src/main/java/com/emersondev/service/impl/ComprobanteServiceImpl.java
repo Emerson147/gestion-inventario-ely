@@ -12,6 +12,7 @@ import com.emersondev.domain.repository.*;
 import com.emersondev.mapper.ComprobanteMapper;
 import com.emersondev.service.interfaces.ComprobanteService;
 import com.emersondev.service.interfaces.DocumentoGeneratorService;
+import com.emersondev.util.SerieGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -40,6 +41,7 @@ public class ComprobanteServiceImpl implements ComprobanteService {
   private final UsuarioRepository usuarioRepository;
   private final ComprobanteMapper comprobanteMapper;
   private final DocumentoGeneratorService documentoGeneratorService;
+  private final SerieGenerator serieGenerator;
 
   @Override
   @Transactional
@@ -68,15 +70,23 @@ public class ComprobanteServiceImpl implements ComprobanteService {
     // Validar tipo de documento según cliente
     validarTipoDocumento(comprobanteRequest.getTipoDocumento(), cliente);
 
-    // Obtener serie
+    // === INICIO: LOGICA ROBUSTA DE SERIE Y NUMERO ===
+    Comprobante.TipoDocumento tipo = comprobanteRequest.getTipoDocumento();
+
+    // 1. Determinar la serie a usasr
     String serie = comprobanteRequest.getSerie();
     if (serie == null || serie.isEmpty()) {
       // Asignar serie predeterminada según tipo de documento
-      serie = obtenerSerieDefaultPorTipo(comprobanteRequest.getTipoDocumento());
+      serie = obtenerSerieDefaultPorTipo(tipo);
     }
 
-    // Generar número secuencial
-    String numero = obtenerSiguienteNumeroComprobante(comprobanteRequest.getTipoDocumento(), serie);
+    // 2. (Opcional) Cambiar de serie automáticamente si se llenó la actual
+    // Si quieres cambiar de serie automáticamente al alcanzar el máximo, descomenta y usa esto:
+       serie = serieGenerator.obtenerSiguienteSerie(tipo, serie);
+
+    // 3. Obtener el correlativo seguro para esa serie
+    String numero = obtenerSiguienteNumeroComprobante(tipo, serie);
+    // === FIN: LOGICA ROBUSTA DE SERIE Y NUMERO ===
 
     // Crear comprobante
     Comprobante comprobante = new Comprobante();
@@ -101,10 +111,8 @@ public class ComprobanteServiceImpl implements ComprobanteService {
       detalle.setTalla(detalleVenta.getTalla());
       detalle.setCantidad(detalleVenta.getCantidad());
       detalle.setPrecioUnitario(detalleVenta.getPrecioUnitario());
-
       // Calcular montos
       detalle.calcularMontos();
-
       // Generar descripción
       detalle.generarDescripcion();
 

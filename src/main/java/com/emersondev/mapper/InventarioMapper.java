@@ -22,6 +22,7 @@ public class InventarioMapper {
     response.setId(inventario.getId());
     response.setSerie(inventario.getSerie());
     response.setCantidad(inventario.getCantidad());
+    response.setEstado(inventario.getEstado());
     response.setFechaCreacion(inventario.getFechaCreacion());
     response.setFechaActualizacion(inventario.getFechaActualizacion());
 

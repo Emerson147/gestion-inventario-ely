@@ -6,6 +6,9 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,7 +36,7 @@ public class Comprobante {
   @Column(nullable = false)
   private LocalDateTime fechaEmision;
 
-  @Column(length = 40)
+  @Column(length = 64)
   private String codigoHash;
 
   @OneToOne
@@ -114,9 +117,23 @@ public class Comprobante {
    * Genera un código Hash simple para el comprobante
    */
   public void generarCodigoHash() {
-    // En un sistema real, esto sería un algoritmo más complejo
-    // que podría incluir firma digital según los requisitos fiscales
-    String base = this.tipoDocumento + "-" + this.serie + "-" + this.numero + "-" + this.total;
-    this.codigoHash = Integer.toHexString(base.hashCode()).toUpperCase();
+    // Concatenar campos relevantes
+    String base = this.tipoDocumento + "|" + this.serie + "|" + this.numero + "|" +
+            this.fechaEmision.toString() + "|" + this.total + "|" +
+            this.venta.getCliente().getRuc(); // ajusta campos según tu modelo
+
+    try {
+      MessageDigest digest = MessageDigest.getInstance("SHA-256");
+      byte[] encodedHash = digest.digest(base.getBytes(StandardCharsets.UTF_8));
+      StringBuilder hexString = new StringBuilder();
+      for (byte b : encodedHash) {
+        String hex = Integer.toHexString(0xff & b);
+        if(hex.length() == 1) hexString.append('0');
+        hexString.append(hex);
+      }
+      this.codigoHash = hexString.toString().toUpperCase();
+    } catch (NoSuchAlgorithmException e) {
+      throw new RuntimeException("Error generando hash SHA-256", e);
+    }
   }
 }

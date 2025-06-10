@@ -25,6 +25,9 @@ public class Color {
   @Column(nullable = false)
   private String nombre;
 
+  @Column(name = "codigo_hex", length = 7)
+  private String codigoHex;
+
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "producto_id", nullable = false)
   @JsonBackReference

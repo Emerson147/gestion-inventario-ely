@@ -54,7 +54,8 @@ public class Inventario {
     DISPONIBLE,
     AGOTADO,
     BAJO_STOCK,
-    RESERVADO
+    RESERVADO;
+
   }
 
   @CreationTimestamp

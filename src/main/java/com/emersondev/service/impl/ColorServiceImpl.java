@@ -1,6 +1,7 @@
 package com.emersondev.service.impl;
 
 import com.emersondev.api.request.ColorRequest;
+import com.emersondev.api.request.TallaRequest;
 import com.emersondev.api.response.ColorResponse;
 import com.emersondev.api.response.PagedResponse;
 import com.emersondev.domain.entity.Color;
@@ -12,6 +13,7 @@ import com.emersondev.domain.exception.ResourceNotFoundException;
 import com.emersondev.domain.repository.ColorRepository;
 import com.emersondev.domain.repository.InventarioRepository;
 import com.emersondev.domain.repository.ProductoRepository;
+import com.emersondev.domain.repository.TallaRepository;
 import com.emersondev.mapper.ColorMapper;
 import com.emersondev.service.interfaces.ColorService;
 import com.emersondev.util.PaginationUtils;
@@ -25,7 +27,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -36,6 +40,7 @@ public class ColorServiceImpl implements ColorService {
   private final ColorRepository colorRepository;
   private final ProductoRepository productoRepository;
   private final InventarioRepository inventarioRepository;
+  private final TallaRepository tallaRepository;
   private final ColorMapper colorMapper;
 
   /**
@@ -66,6 +71,7 @@ public class ColorServiceImpl implements ColorService {
     // Crear y guardar el nuevo color
     Color color = new Color();
     color.setNombre(colorRequest.getNombre());
+    color.setCodigoHex(colorRequest.getCodigoHex() != null ? colorRequest.getCodigoHex() : "");
     color.setProducto(producto);
     color.setTallas(new HashSet<>());
 
@@ -168,10 +174,10 @@ public class ColorServiceImpl implements ColorService {
 
     // Buscar el color por ID
     Color color = colorRepository.findById(id)
-        .orElseThrow(() -> {
-          log.error("Color con ID {} no encontrado", id);
-          return new ResourceNotFoundException("Color", "id", id);
-        });
+            .orElseThrow(() -> {
+              log.error("Color con ID {} no encontrado", id);
+              return new ResourceNotFoundException("Color", "id", id);
+            });
 
     // Verificar si ya existe un color con el mismo nombre para este producto
     if (!color.getNombre().equals(colorRequest.getNombre()) && colorRepository.existsByNombreAndProductoId(colorRequest.getNombre(), color.getProducto().getId())) {
@@ -182,20 +188,67 @@ public class ColorServiceImpl implements ColorService {
     // Actualizar datos del color
     color.setNombre(colorRequest.getNombre());
 
-    //Actualizar tallas si se proporcionan
-    if (colorRequest.getTallas() != null && !colorRequest.getTallas().isEmpty()) {
-      //Si ya existian tallas, limpiarlas primero para evitar duplicados
-      color.getTallas().clear();
-
-      //Mapear nuevas tallas
-      colorMapper.mapTallas(color, colorRequest.getTallas());
+    // Actualizar código hexadecimal si se proporciona
+    if (colorRequest.getCodigoHex() != null) {
+      color.setCodigoHex(colorRequest.getCodigoHex());
+    } else {
+      color.setCodigoHex(""); // Si no se proporciona, establecer como vacío
     }
+
+    // Actualizar tallas si se proporcionan
+    if (colorRequest.getTallas() != null && !colorRequest.getTallas().isEmpty()) {
+      actualizarTallas(color, colorRequest.getTallas());
+    }
+
 
     // Guardar el color actualizado
     color = colorRepository.save(color);
     log.info("Color actualizado exitosamente con ID {}", color.getId());
 
     return colorMapper.toResponse(color);
+  }
+
+  private void actualizarTallas(Color color, List<TallaRequest> nuevasTallas) {
+    Set<Talla> tallasExistentes = color.getTallas(); // Cambiar a Set
+    List<String> numerosTallasNuevas = nuevasTallas.stream()
+            .map(TallaRequest::getNumero)
+            .toList();
+
+    // 1. Eliminar solo las tallas que NO tienen inventario
+    Iterator<Talla> iterator = tallasExistentes.iterator();
+    while (iterator.hasNext()) {
+      Talla tallaExistente = iterator.next();
+
+      // Si la talla no está en la nueva lista
+      if (!numerosTallasNuevas.contains(tallaExistente.getNumero())) {
+        // Verificar si tiene inventario
+        boolean tieneInventario = inventarioRepository.existsByTallaId(tallaExistente.getId());
+
+        if (!tieneInventario) {
+          // Solo eliminar si NO tiene inventario
+          iterator.remove();
+          tallaRepository.delete(tallaExistente);
+          log.info("Talla {} eliminada (sin inventario)", tallaExistente.getNumero());
+        } else {
+          log.warn("No se puede eliminar la talla {} porque tiene inventario asociado", tallaExistente.getNumero());
+        }
+      }
+    }
+
+    // 2. Agregar solo las tallas nuevas (que no existen)
+    Set<String> numerosTallasExistentes = tallasExistentes.stream() // Cambiar a Set
+            .map(Talla::getNumero)
+            .collect(Collectors.toSet()); // Cambiar a toSet()
+
+    for (TallaRequest tallaRequest : nuevasTallas) {
+      if (!numerosTallasExistentes.contains(tallaRequest.getNumero())) {
+        Talla nuevaTalla = new Talla();
+        nuevaTalla.setNumero(tallaRequest.getNumero());
+        nuevaTalla.setColor(color);
+        color.getTallas().add(nuevaTalla);
+        log.info("Nueva talla {} agregada", tallaRequest.getNumero());
+      }
+    }
   }
 
   /**

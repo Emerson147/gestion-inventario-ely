@@ -115,7 +115,7 @@ public class AuthServiceImpl implements AuthService {
 
     // Creamos la nueva cuenta de usuario
     Usuario usuario = new Usuario();
-    usuario.setNombre(registroRequest.getNombre());
+    usuario.setNombres(registroRequest.getNombre());
     usuario.setApellidos(registroRequest.getApellidos());
     usuario.setUsername(registroRequest.getUsername());
     usuario.setEmail(registroRequest.getEmail());
@@ -124,8 +124,8 @@ public class AuthServiceImpl implements AuthService {
 
     // Asignamos el rol por defecto (VENDEDOR)
     Set<Rol> roles = new HashSet<>();
-    Rol userRole = rolRepository.findByNombre(Rol.NombreRol.ROLE_VENDEDOR)
-            .orElseThrow(() -> new ResourceNotFoundException("Rol", "nombre", Rol.NombreRol.ROLE_VENDEDOR));
+    Rol userRole = rolRepository.findByNombre(Rol.NombreRol.ROLE_VENTAS)
+            .orElseThrow(() -> new ResourceNotFoundException("Rol", "nombre", Rol.NombreRol.ROLE_VENTAS));
     roles.add(userRole);
     usuario.setRoles(roles);
 
