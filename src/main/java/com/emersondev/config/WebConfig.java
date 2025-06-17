@@ -12,18 +12,21 @@ public class WebConfig implements WebMvcConfigurer {
 
   private static final Logger logger = LoggerFactory.getLogger(WebConfig.class);
 
-
   @Override
   public void addCorsMappings(CorsRegistry registry) {
     logger.info("Configurando CORS mapping para la aplicación");
 
-    //Auth
+    // Auth - Agregando múltiples orígenes
     registry.addMapping("/**")
-            .allowedOrigins("http://localhost:4200") // Ajusta al origen de tu frontend
+            .allowedOrigins(
+                    "http://localhost:4200",                                    // Para desarrollo local
+                    "https://gestion-inventario-frontend.vercel.app"           // Para producción en Vercel
+            )
             .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
             .allowedHeaders("*")
             .allowCredentials(true);
-    logger.info("Configuración de CORS completada");
+
+    logger.info("Configuración de CORS completada para localhost:4200 y Vercel");
   }
 
   @Override
