@@ -50,5 +50,14 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
   @Query("SELECT DISTINCT p.marca FROM Producto p WHERE p.marca IS NOT NULL")
   List<String> findDistinctMarcas();
 
-
+  @Query("SELECT p FROM Producto p LEFT JOIN FETCH p.colores c LEFT JOIN FETCH c.tallas WHERE p.id = :id")
+  Optional<Producto> findByIdWithDetails(@Param("id") Long id);
+  
+  @Query("SELECT p FROM Producto p LEFT JOIN FETCH p.colores WHERE p.codigo = :codigo")
+  Optional<Producto> findByCodigoWithColors(@Param("codigo") String codigo);
+  
+  @Query(value = "SELECT p.* FROM productos p WHERE " +
+         "to_tsvector('spanish', p.nombre || ' ' || p.descripcion || ' ' || p.marca || ' ' || p.modelo) " +
+         "@@ plainto_tsquery('spanish', :searchTerm)", nativeQuery = true)
+  List<Producto> fullTextSearch(@Param("searchTerm") String searchTerm);
 }

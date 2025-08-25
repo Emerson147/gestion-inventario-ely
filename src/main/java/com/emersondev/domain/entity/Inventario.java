@@ -2,6 +2,7 @@ package com.emersondev.domain.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -14,14 +15,23 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "inventarios")
+@Table(name = "inventarios", indexes = {
+    @Index(name = "idx_inventario_serie", columnList = "serie"),
+    @Index(name = "idx_inventario_producto", columnList = "producto_id"),
+    @Index(name = "idx_inventario_color", columnList = "color_id"),
+    @Index(name = "idx_inventario_talla", columnList = "talla_id"),
+    @Index(name = "idx_inventario_almacen", columnList = "almacen_id"),
+    @Index(name = "idx_inventario_estado", columnList = "estado"),
+    @Index(name = "idx_inventario_cantidad", columnList = "cantidad"),
+    @Index(name = "idx_inventario_producto_color_talla", columnList = "producto_id,color_id,talla_id")
+})
 public class Inventario {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @Column(nullable = false, unique = true)
+  @Column(nullable = false, unique = true, length = 50)
   private String serie;
 
   @ManyToOne(fetch = FetchType.LAZY)
@@ -47,7 +57,8 @@ public class Inventario {
   @Column(nullable = false)
   private EstadoInventario estado;
 
-  @OneToMany(mappedBy = "inventario", cascade = CascadeType.ALL, orphanRemoval = true)
+  @OneToMany(mappedBy = "inventario", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+  @BatchSize(size = 20)
   private Set<MovimientoInventario> movimientos = new HashSet<>();
 
   public enum EstadoInventario {

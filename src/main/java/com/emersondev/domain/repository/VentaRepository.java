@@ -19,10 +19,10 @@ public interface VentaRepository extends JpaRepository<Venta, Long> {
 
   Optional<Venta> findByNumeroVenta(String numeroVenta);
 
-  @Query("SELECT v FROM Venta v WHERE DATE(v.fechaCreacion) = :fecha")
+  @Query("SELECT v FROM Venta v LEFT JOIN FETCH v.cliente LEFT JOIN FETCH v.usuario WHERE DATE(v.fechaCreacion) = :fecha")
   List<Venta> findByFechaCreacion(@Param("fecha") LocalDate fecha);
 
-  @Query("SELECT v FROM Venta v WHERE v.fechaCreacion BETWEEN :fechaInicio AND :fechaFin")
+  @Query("SELECT v FROM Venta v LEFT JOIN FETCH v.cliente LEFT JOIN FETCH v.usuario WHERE v.fechaCreacion BETWEEN :fechaInicio AND :fechaFin")
   List<Venta> findByFechaCreacionBetween(
           @Param("fechaInicio") LocalDateTime fechaInicio,
           @Param("fechaFin") LocalDateTime fechaFin);
@@ -89,4 +89,18 @@ public interface VentaRepository extends JpaRepository<Venta, Long> {
   String findUltimoNumeroVentaParaFecha(@Param("prefijo") String prefijo);
 
   Optional<Venta> findTopByNumeroVentaStartingWithOrderByNumeroVentaDesc(String prefijo);
+  
+  @Query("SELECT DISTINCT v FROM Venta v " +
+         "LEFT JOIN FETCH v.cliente " +
+         "LEFT JOIN FETCH v.usuario " +
+         "LEFT JOIN FETCH v.detalles d " +
+         "LEFT JOIN FETCH d.inventario i " +
+         "LEFT JOIN FETCH i.producto " +
+         "LEFT JOIN FETCH i.color " +
+         "LEFT JOIN FETCH i.talla " +
+         "WHERE v.id = :ventaId")
+  Optional<Venta> findByIdWithFullDetails(@Param("ventaId") Long ventaId);
+  
+  @Query("SELECT v FROM Venta v LEFT JOIN FETCH v.cliente LEFT JOIN FETCH v.usuario WHERE v.estado = :estado")
+  List<Venta> findByEstadoWithDetails(@Param("estado") Venta.EstadoVenta estado);
 }
