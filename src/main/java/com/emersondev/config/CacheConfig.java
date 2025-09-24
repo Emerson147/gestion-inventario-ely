@@ -31,8 +31,10 @@ public class CacheConfig {
               "ventas",
               "inventario",
               "reportes",
+              "almacenes",
               "usuarios",
               "clientes",
+              "clientes-activos",
               "dashboard-metrics"
       ));
         
