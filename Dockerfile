@@ -34,17 +34,17 @@ USER appuser
 EXPOSE 8080
 
 # Use dumb-init and optimized JVM flags
-ENTRYPOINT ["dumb-init", "--"]
+# CORREGIDO - Opciones compatibles con Java 17
 CMD ["java", \
      "-XX:+UseG1GC", \
      "-XX:+UseStringDeduplication", \
      "-XX:+OptimizeStringConcat", \
      "-XX:+UseCompressedOops", \
+     "-XX:+UseContainerSupport", \
+     "-XX:MaxRAMPercentage=75.0", \
      "-Xms256m", \
      "-Xmx512m", \
      "-XX:NewRatio=2", \
-     "-XX:+UnlockExperimentalVMOptions", \
-     "-XX:+UseCGroupMemoryLimitForHeap", \
      "-Djava.security.egd=file:/dev/./urandom", \
      "-Dspring.profiles.active=prod", \
      "-jar", "gestion-inventario-ely.jar"]
