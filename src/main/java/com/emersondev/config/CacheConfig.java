@@ -7,6 +7,7 @@ import org.springframework.cache.caffeine.CaffeineCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 @Configuration
@@ -25,15 +26,15 @@ public class CacheConfig {
                 .recordStats());
                 
         // Set cache names
-        cacheManager.setCacheNames(
-            "productos", 
-            "ventas", 
-            "inventario", 
-            "reportes", 
-            "usuarios", 
-            "clientes",
-            "dashboard-metrics"
-        );
+      cacheManager.setCacheNames(Arrays.asList(
+              "productos",
+              "ventas",
+              "inventario",
+              "reportes",
+              "usuarios",
+              "clientes",
+              "dashboard-metrics"
+      ));
         
         return cacheManager;
     }
