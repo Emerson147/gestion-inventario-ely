@@ -63,8 +63,8 @@ public class DetalleComprobante {
     if (this.cantidad != null && this.precioUnitario != null) {
       // El precio unitario ya incluye IGV en nuestro caso
       this.subtotal = this.precioUnitario.multiply(new BigDecimal(this.cantidad));
-      this.igv = this.subtotal.multiply(new BigDecimal("0.18")).setScale(2, RoundingMode.HALF_EVEN);
-      this.total = this.subtotal;
+      this.igv = BigDecimal.ZERO; // El precio del producto ya incluye IGV
+      this.total = this.subtotal; // El total es igual al subtotal ya que no hay IGV adicional
     }
   }
 

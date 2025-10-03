@@ -125,10 +125,23 @@ public class VentaServiceImpl implements VentaService {
       subtotal = subtotal.add(detalle.getSubtotal());
       detalleVentas.add(detalle);
     }
-    // Establecer los totales
-    venta.setSubtotal(subtotal);
-    venta.setIgv(subtotal.multiply(new BigDecimal("0.18")).setScale(2, RoundingMode.HALF_EVEN));
-    venta.setTotal(subtotal.add(venta.getIgv()).setScale(2, RoundingMode.HALF_EVEN));
+    // Establecer los totales con cálculo correcto de IGV
+    BigDecimal totalConIgv = subtotal; // El subtotal ya contiene el precio con IGV incluido
+
+    // Calcular la operación gravada (base imponible) = Total / 1.18
+    BigDecimal factorIgv = new BigDecimal("1.18"); // 1 + 0.18 (18% de IGV)
+    BigDecimal operacionGravada = totalConIgv.divide(factorIgv, 2, RoundingMode.HALF_UP);
+
+    // Calcular el IGV = Total - Operación Gravada
+    BigDecimal igvCalculado = totalConIgv.subtract(operacionGravada);
+
+    // Establecer los valores en la venta
+    venta.setSubtotal(operacionGravada); // El subtotal es la operación gravada (sin IGV)
+    venta.setIgv(igvCalculado);          // El IGV calculado
+    venta.setTotal(totalConIgv);         // El total final con IGV incluido
+
+    log.debug("Cálculo de totales - Operación Gravada: {}, IGV (18%): {}, Total: {}", 
+              operacionGravada, igvCalculado, totalConIgv);
     // venta.setEstado(Venta.EstadoVenta.COMPLETADA);  Cambia a completada tras registrar movimiento
 
     // 1. Guarda la venta
@@ -953,3 +966,4 @@ public class VentaServiceImpl implements VentaService {
     }
   }
 }
+

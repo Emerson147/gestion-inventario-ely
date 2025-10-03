@@ -38,6 +38,7 @@ public class CacheConfig {
               "clientes-activos",
               "pagos",
               "reportes-pagos",
+              "comprobantes",
               "dashboard-metrics"
       ));
         
