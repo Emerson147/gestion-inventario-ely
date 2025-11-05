@@ -1,0 +1,310 @@
+{
+  "info": {
+    "name": "Pruebas Ticketera XPrinter XP-V320M - COMPLETA",
+    "description": "Colección completa para crear datos reales y probar la ticketera",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "DATOS PARA PRUEBAS",
+      "item": [
+        {
+          "name": "1. Listar Comprobantes Existentes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/comprobantes",
+              "host": ["{{base_url}}"],
+              "path": ["api", "comprobantes"]
+            },
+            "description": "Lista todos los comprobantes existentes en el sistema"
+          }
+        },
+        {
+          "name": "2. Listar Ventas Existentes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/ventas",
+              "host": ["{{base_url}}"],
+              "path": ["api", "ventas"]
+            },
+            "description": "Lista todas las ventas existentes en el sistema"
+          }
+        },
+        {
+          "name": "3. Crear Cliente de Prueba",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"nombres\": \"María Elena\",\n    \"apellidos\": \"García López\",\n    \"dni\": \"87654321\",\n    \"telefono\": \"987654321\",\n    \"email\": \"maria.garcia@email.com\",\n    \"direccion\": \"Jr. Los Pinos 456\",\n    \"estado\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/clientes",
+              "host": ["{{base_url}}"],
+              "path": ["api", "clientes"]
+            },
+            "description": "Crea un cliente de prueba para las transacciones"
+          }
+        },
+        {
+          "name": "4. Listar Inventario Disponible",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/inventario",
+              "host": ["{{base_url}}"],
+              "path": ["api", "inventario"]
+            },
+            "description": "Lista el inventario disponible para crear ventas"
+          }
+        },
+        {
+          "name": "5. Crear Venta de Prueba",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"clienteId\": 1,\n    \"usuarioId\": 1,\n    \"tipoComprobante\": \"BOLETA\",\n    \"serieComprobante\": \"B001\",\n    \"numeroComprobante\": \"00000001\",\n    \"observaciones\": \"Venta de prueba para ticket\",\n    \"detalles\": [\n        {\n            \"inventarioId\": 1,\n            \"cantidad\": 1\n        }\n    ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/ventas",
+              "host": ["{{base_url}}"],
+              "path": ["api", "ventas"]
+            },
+            "description": "Crea una venta de prueba (ajustar IDs según tu sistema)"
+          }
+        },
+        {
+          "name": "6. Generar Comprobante desde Venta",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"ventaId\": 1,\n    \"tipoDocumento\": \"BOLETA\",\n    \"observaciones\": \"Comprobante para prueba de impresión\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/comprobantes",
+              "host": ["{{base_url}}"],
+              "path": ["api", "comprobantes"]
+            },
+            "description": "Genera un comprobante desde una venta existente (cambiar ventaId)"
+          }
+        }
+      ],
+      "description": "Endpoints para crear y verificar datos de prueba"
+    },
+    {
+      "name": "PRUEBAS TICKETERA",
+      "item": [
+        {
+          "name": "1. Verificar Conexión",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/comprobantes/verificar-conexion",
+              "host": ["{{base_url}}"],
+              "path": ["api", "comprobantes", "verificar-conexion"]
+            },
+            "description": "Verifica si la ticketera está conectada y disponible"
+          }
+        },
+        {
+          "name": "2. Obtener Configuración",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/comprobantes/configuracion-impresion",
+              "host": ["{{base_url}}"],
+              "path": ["api", "comprobantes", "configuracion-impresion"]
+            },
+            "description": "Obtiene la configuración actual de la ticketera"
+          }
+        },
+        {
+          "name": "3. Imprimir Ticket de Prueba",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/comprobantes/imprimir-prueba",
+              "host": ["{{base_url}}"],
+              "path": ["api", "comprobantes", "imprimir-prueba"]
+            },
+            "description": "Imprime un ticket de prueba para verificar la conexión"
+          }
+        }
+      ],
+      "description": "Pruebas básicas de la ticketera"
+    },
+    {
+      "name": "IMPRESIÓN COMPROBANTES REALES",
+      "item": [
+        {
+          "name": "1. Vista Previa Comprobante",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/comprobantes/{{comprobante_id}}/vista-previa-ticket",
+              "host": ["{{base_url}}"],
+              "path": ["api", "comprobantes", "{{comprobante_id}}", "vista-previa-ticket"]
+            },
+            "description": "Obtiene vista previa del ticket sin imprimir"
+          }
+        },
+        {
+          "name": "2. Imprimir Comprobante Real",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/comprobantes/{{comprobante_id}}/imprimir-ticket",
+              "host": ["{{base_url}}"],
+              "path": ["api", "comprobantes", "{{comprobante_id}}", "imprimir-ticket"]
+            },
+            "description": "Imprime el ticket del comprobante real"
+          }
+        },
+        {
+          "name": "3. Obtener Comprobante por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/comprobantes/{{comprobante_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "comprobantes", "{{comprobante_id}}"]
+            },
+            "description": "Obtiene los detalles completos del comprobante"
+          }
+        }
+      ],
+      "description": "Impresión de comprobantes reales"
+    },
+    {
+      "name": "FUNCIONES ADICIONALES",
+      "item": [
+        {
+          "name": "1. Cortar Papel",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/comprobantes/cortar-papel",
+              "host": ["{{base_url}}"],
+              "path": ["api", "comprobantes", "cortar-papel"]
+            },
+            "description": "Envía comando para cortar el papel de la ticketera"
+          }
+        },
+        {
+          "name": "2. Abrir Cajón",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/comprobantes/abrir-cajon",
+              "host": ["{{base_url}}"],
+              "path": ["api", "comprobantes", "abrir-cajon"]
+            },
+            "description": "Envía comando para abrir el cajón de dinero"
+          }
+        }
+      ],
+      "description": "Funciones adicionales de la ticketera"
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "comprobante_id",
+      "value": "1",
+      "type": "string",
+      "description": "ID del comprobante a imprimir - cambiar según necesites"
+    }
+  ]
+}
