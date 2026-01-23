@@ -2,6 +2,7 @@ package com.emersondev.api.request;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -26,7 +27,7 @@ public class InventarioRequest {
   private Long almacenId;
 
   @NotNull(message = "La cantidad es obligatoria")
-  @Positive(message = "La cantidad debe ser positiva")
+  @PositiveOrZero(message = "La cantidad no puede ser negativa")
   private Integer cantidad;
 
   private String serie;

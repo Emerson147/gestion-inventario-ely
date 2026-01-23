@@ -122,16 +122,43 @@ public class AuthServiceImpl implements AuthService {
     usuario.setPassword(passwordEncoder.encode(registroRequest.getPassword()));
     usuario.setActivo(true);
 
-    // Asignamos el rol por defecto (VENDEDOR)
+      // Asignamos los roles del request o VENTAS por defecto si no se envían
     Set<Rol> roles = new HashSet<>();
-    Rol userRole = rolRepository.findByNombre(Rol.NombreRol.ROLE_VENTAS)
-            .orElseThrow(() -> new ResourceNotFoundException("Rol", "nombre", Rol.NombreRol.ROLE_VENTAS));
-    roles.add(userRole);
+
+    if (registroRequest.getRoles() != null && !registroRequest.getRoles().isEmpty()) {
+      // Procesamos los roles enviados en el request
+      for (String rolNombre : registroRequest.getRoles()) {
+        Rol.NombreRol nombreRol;
+
+        // Convertimos el nombre del rol a mayúsculas y agregamos el prefijo ROLE_ si no lo tiene
+        String rolNormalizado = rolNombre.toUpperCase();
+        if (!rolNormalizado.startsWith("ROLE_")) {
+          rolNormalizado = "ROLE_" + rolNormalizado;
+        }
+
+        try {
+          nombreRol = Rol.NombreRol.valueOf(rolNormalizado);
+        } catch (IllegalArgumentException e) {
+          log.error("Rol inválido: {}", rolNombre);
+          throw new BusinessException("El rol '" + rolNombre + "' no es válido. Roles válidos: admin, ventas");
+        }
+
+        Rol rol = rolRepository.findByNombre(nombreRol)
+                .orElseThrow(() -> new ResourceNotFoundException("Rol", "nombre", nombreRol));
+        roles.add(rol);
+      }
+    } else {
+      // Si no se envían roles, asignamos VENTAS por defecto
+      Rol userRole = rolRepository.findByNombre(Rol.NombreRol.ROLE_VENTAS)
+              .orElseThrow(() -> new ResourceNotFoundException("Rol", "nombre", Rol.NombreRol.ROLE_VENTAS));
+      roles.add(userRole);
+    }
+
     usuario.setRoles(roles);
 
     // Guardamos el usuario en la base de datos
     usuarioRepository.save(usuario);
-    log.info("Usuario registrado exitosamente: {}", registroRequest.getUsername());
+    log.info("Usuario registrado exitosamente: {} con roles: {}", registroRequest.getUsername(), roles);
 
     // Procedemos con el login automático
     LoginRequest loginRequest = new LoginRequest();

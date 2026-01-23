@@ -68,7 +68,7 @@ public class InventarioServiceImpl implements InventarioService {
     }
 
     // Verificamos que la cantidad no pueda ser negativa
-    if (request.getCantidad() <= 0) {
+    if (request.getCantidad() < 0) {
       throw new BusinessException("La cantidad no puede ser negativa");
     }
 
