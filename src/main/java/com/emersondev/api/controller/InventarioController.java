@@ -42,7 +42,7 @@ public class InventarioController {
   @PreAuthorize("hasRole('ADMIN') or hasRole('VENTAS')")
   public ResponseEntity<PagedResponse<InventarioResponse>> obtenerInventarios(
           @RequestParam(defaultValue = "0") Integer page,
-          @RequestParam(defaultValue = "10") Integer size,
+          @RequestParam(defaultValue = "10000") Integer size,
           @RequestParam(defaultValue = "id") String sortBy,
           @RequestParam(defaultValue = "asc") String sortDir
   ) {
